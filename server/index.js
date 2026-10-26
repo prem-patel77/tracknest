@@ -1,4 +1,5 @@
 require("dotenv").config();
+const pool = require("./config/db");
 const express = require("express");
 const cors = require("cors");
 
@@ -9,6 +10,16 @@ app.use(express.json());
 
 app.get("/", (req, res) => {
   res.json({ message: "TrackNest API is running" });
+});
+
+app.get("/api/db-test", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT NOW()");
+    res.json({ connected: true, time: result.rows[0].now });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ connected: false, error: err.message });
+  }
 });
 
 const PORT = process.env.PORT || 5000;
