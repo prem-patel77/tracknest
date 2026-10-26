@@ -1,0 +1,22 @@
+### Register
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Prem",
+  "email": "prem@test.com",
+  "password": "password123"
+}
+
+### Login
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "prem@test.com",
+  "password": "password123"
+}
+
+### Me (protected)
+GET http://localhost:5000/api/auth/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzkzMDM5MTIxLCJleHAiOjE3OTM2NDM5MjF9.h8E0QlULPUZJU41etRt7OBBKgXn-znF3___-MY-k_2M
