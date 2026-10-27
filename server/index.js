@@ -1,4 +1,5 @@
 require("dotenv").config();
+const jobRoutes = require("./routes/jobRoutes");
 const authRoutes = require("./routes/authRoutes");
 const pool = require("./config/db");
 const express = require("express");
@@ -9,6 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
+app.use("/api/jobs", jobRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "TrackNest API is running" });

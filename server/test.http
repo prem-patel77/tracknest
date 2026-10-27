@@ -1,3 +1,5 @@
+@token = PASTE_TOKEN_HERE
+
 ### Register
 POST http://localhost:5000/api/auth/register
 Content-Type: application/json
@@ -20,3 +22,50 @@ Content-Type: application/json
 ### Me (protected)
 GET http://localhost:5000/api/auth/me
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzkzMDM5MTIxLCJleHAiOjE3OTM2NDM5MjF9.h8E0QlULPUZJU41etRt7OBBKgXn-znF3___-MY-k_2M
+
+### Create job
+POST http://localhost:5000/api/jobs
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "company": "Shopify",
+  "job_title": "Software Engineer Intern",
+  "location": "Toronto, ON",
+  "salary": "$30/hr",
+  "status": "Applied",
+  "deadline": "2026-11-15",
+  "job_url": "https://www.shopify.com/careers",
+  "notes": "Applied through the career page"
+}
+
+### Get all jobs
+GET http://localhost:5000/api/jobs
+Authorization: Bearer {{token}}
+
+### Get one job
+GET http://localhost:5000/api/jobs/1
+Authorization: Bearer {{token}}
+
+### Update job
+PUT http://localhost:5000/api/jobs/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "company": "Shopify",
+  "job_title": "Software Engineer Intern",
+  "location": "Toronto, ON",
+  "salary": "$30/hr",
+  "status": "Interview",
+  "deadline": "2026-11-15",
+  "job_url": "https://www.shopify.com/careers",
+  "notes": "Got an interview invite"
+}
+
+### Delete job
+DELETE http://localhost:5000/api/jobs/1
+Authorization: Bearer {{token}}
+
+
+
