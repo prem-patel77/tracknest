@@ -6,6 +6,7 @@ import AddJob from "./pages/AddJob";
 import EditJob from "./pages/EditJob";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Layout from "./components/Layout";
 
 function App() {
   return (
@@ -13,11 +14,13 @@ function App() {
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      {/* Pages below need a logged-in user */}
-      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/jobs/new" element={<ProtectedRoute><AddJob /></ProtectedRoute>} />
-      <Route path="/jobs/:id/edit" element={<ProtectedRoute><EditJob /></ProtectedRoute>} />
-      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+      {/* Pages below need a logged-in user and share the sidebar/navbar Layout */}
+      <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/jobs/new" element={<AddJob />} />
+        <Route path="/jobs/:id/edit" element={<EditJob />} />
+        <Route path="/profile" element={<Profile />} />
+      </Route>
       <Route path="*" element={<h1>404 - Page not found</h1>} />
     </Routes>
   );
