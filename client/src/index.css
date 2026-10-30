@@ -299,3 +299,47 @@ a.btn {
 .badge-interview { background: #ede9fe; color: #6d28d9; }
 .badge-offer { background: #dcfce7; color: #15803d; }
 .badge-rejected { background: #fee2e2; color: #b91c1c; }
+
+/* ---------- Job form (add / edit) ---------- */
+.form-card {
+  background: var(--card);
+  max-width: 600px;
+  padding: 24px 32px 32px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.form-card label {
+  display: block;
+  margin: 16px 0 6px;
+  font-weight: 500;
+}
+
+.form-card input,
+.form-card select,
+.form-card textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: inherit;
+  background: white;
+}
+
+.form-card input:focus,
+.form-card select:focus,
+.form-card textarea:focus {
+  outline: 2px solid var(--primary-light);
+  border-color: var(--primary-light);
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.form-actions .btn {
+  margin-top: 0;
+}
