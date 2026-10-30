@@ -2,11 +2,14 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
 import StatusBadge from "../components/StatusBadge";
+import ConfirmModal from "../components/ConfirmModal";
 
 export default function Dashboard() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [jobToDelete, setJobToDelete] = useState(null); // job waiting for confirmation
+  const [deleting, setDeleting] = useState(false);
 
   // Load all of the user's jobs once, when the page opens
   useEffect(() => {
@@ -16,6 +19,21 @@ export default function Dashboard() {
       .catch((err) => setError(err.response?.data?.message || "Could not load jobs"))
       .finally(() => setLoading(false));
   }, []);
+
+  // Called when the user clicks "Delete" in the popup
+  const confirmDelete = async () => {
+    setDeleting(true);
+    try {
+      await api.delete(`/jobs/${jobToDelete.id}`);
+      // Remove it from the list on screen (no need to reload everything)
+      setJobs(jobs.filter((j) => j.id !== jobToDelete.id));
+    } catch (err) {
+      setError(err.response?.data?.message || "Could not delete job");
+    } finally {
+      setDeleting(false);
+      setJobToDelete(null);
+    }
+  };
 
   // Count how many jobs have a given status (for the summary cards)
   const countByStatus = (status) => jobs.filter((j) => j.status === status).length;
@@ -73,12 +91,24 @@ export default function Dashboard() {
                   <td>{job.deadline || "-"}</td>
                   <td>
                     <Link to={`/jobs/${job.id}/edit`} className="link-action">Edit</Link>
+                    <button className="link-action link-danger" onClick={() => setJobToDelete(job)}>
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+
+      {jobToDelete && (
+        <ConfirmModal
+          message={`Delete "${jobToDelete.job_title}" at ${jobToDelete.company}? This cannot be undone.`}
+          onConfirm={confirmDelete}
+          onCancel={() => setJobToDelete(null)}
+          busy={deleting}
+        />
       )}
     </div>
   );
