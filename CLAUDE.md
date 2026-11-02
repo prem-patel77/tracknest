@@ -12,7 +12,7 @@ Full-stack job application tracker (portfolio project for internship application
 - After each step, briefly explain what you changed and why.
 
 ## Progress
-Phases 1-13 done and deployed (Vercel + Render + Neon). Pushing to main auto-redeploys both. Phases 14-17 (Chunk 2) done locally, not pushed yet. Next: Chunk 3.
+Phases 1-13 done and deployed (Vercel + Render + Neon). Pushing to main auto-redeploys both. Phases 14-20 (Chunks 2-3) and Chunk 4 (Phases 22-24, 26-27, plus lint fix, lazy-loaded Statistics, seed script, UI polish) done locally, not pushed yet. Remaining: Phase 21 (dark mode, optional) and re-check the deployed app after pushing.
 
 ## Roadmap (build in chunks; I will say which chunk to do)
 - Chunk 1 (Phases 10-13): Dashboard layout (sidebar, navbar, summary cards, job table), Add Job form, Edit Job, Delete with confirmation popup.
