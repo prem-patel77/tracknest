@@ -75,4 +75,71 @@ const getMe = async (req, res) => {
   }
 };
 
-module.exports = { register, login, getMe };
+// PUT /api/auth/profile  { name, email, currentPassword }
+// Changing the name is free. Changing the email (it is the login) needs the current password.
+const updateProfile = async (req, res) => {
+  try {
+    const { name, email, currentPassword } = req.body;
+
+    if (!String(name || "").trim() || !String(email || "").trim()) {
+      return res.status(400).json({ message: "Name and email are required" });
+    }
+    if (!EMAIL_REGEX.test(email.trim())) {
+      return res.status(400).json({ message: "Please enter a valid email" });
+    }
+
+    const user = await User.findByIdWithHash(req.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (normalizedEmail !== user.email) {
+      // The email is changing: prove it is really the owner
+      if (!currentPassword || !(await bcrypt.compare(currentPassword, user.password_hash))) {
+        return res.status(401).json({ message: "Current password is incorrect" });
+      }
+      const taken = await User.findByEmail(normalizedEmail);
+      if (taken) {
+        return res.status(409).json({ message: "Email is already registered" });
+      }
+    }
+
+    const updated = await User.updateProfile(req.userId, name.trim(), normalizedEmail);
+    res.json({ user: updated });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// PUT /api/auth/password  { currentPassword, newPassword }
+const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Current and new password are required" });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ message: "New password must be at least 8 characters" });
+    }
+
+    const user = await User.findByIdWithHash(req.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    if (!(await bcrypt.compare(currentPassword, user.password_hash))) {
+      return res.status(401).json({ message: "Current password is incorrect" });
+    }
+
+    await User.updatePassword(req.userId, await bcrypt.hash(newPassword, 10));
+    res.json({ message: "Password updated" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports = { register, login, getMe, updateProfile, changePassword };

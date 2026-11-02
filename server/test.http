@@ -78,3 +78,25 @@ Authorization: Bearer {{token}}
 
 
 
+
+
+### Update profile (email change also needs currentPassword)
+PUT http://localhost:5000/api/auth/profile
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "New Name",
+  "email": "new@example.com",
+  "currentPassword": "your-current-password"
+}
+
+### Change password
+PUT http://localhost:5000/api/auth/password
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "currentPassword": "your-current-password",
+  "newPassword": "a-new-password-123"
+}

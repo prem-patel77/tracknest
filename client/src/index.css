@@ -457,6 +457,24 @@ a.btn {
   font-size: 1.1rem;
 }
 
+/* ---------- Profile page ---------- */
+.profile-card {
+  margin-top: 24px;
+}
+
+.profile-card h2 {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+}
+
+.alert-success {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #15803d;
+  padding: 10px;
+  border-radius: 6px;
+}
+
 /* ---------- Responsive design (keep this block LAST so it overrides the rules above) ---------- */
 
 /* Tablet (up to 1024px): slimmer sidebar and tighter spacing */
