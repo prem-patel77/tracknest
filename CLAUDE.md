@@ -12,6 +12,16 @@ Full-stack job application tracker (portfolio project for internship application
 - After each step, briefly explain what you changed and why.
 
 ## Progress
-Phases 1-8 done (setup, schema, Express API, auth, job CRUD, React setup with routing).
-Next: Phase 9 login/register UI, then Phase 10 dashboard (sidebar, navbar, summary cards, job table).
-Plan: deploy early (Vercel + Render + Neon), then search/filter/sort/pagination, charts, polish.
+Phases 1-13 done. Next: deploy, then Chunk 2
+
+## Roadmap (build in chunks; I will say which chunk to do)
+- Chunk 1 (Phases 10-13): Dashboard layout (sidebar, navbar, summary cards, job table), Add Job form, Edit Job, Delete with confirmation popup.
+- Chunk 2 (Phases 14-17): Search by company/position, status filter dropdown (All, Saved, Applied, OA, Interview, Offer, Rejected), sorting, pagination. Do it on the server API (query params) for pagination.
+- Chunk 3 (Phases 18, 19, 20): Statistics page (cards, pie chart by status, bar chart per month), responsive design, user profile (edit name, email, password).
+- Chunk 4 (Phases 22-24, 26-27): Validation, error handling (404/500/401), loading spinners and disabled buttons, README with screenshots/API docs, testing checklist.
+- Deployment (Phase 25) is done together with me: Vercel (client), Render (server), Neon (database). Do not attempt it alone.
+- Optional last: dark mode (Phase 21).
+
+## Working rules
+- After each phase, make a local git commit (never push). Stop at the end of a chunk and tell me how to test.
+- Never read or commit .env files.
