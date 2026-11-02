@@ -21,7 +21,7 @@ Content-Type: application/json
 
 ### Me (protected)
 GET http://localhost:5000/api/auth/me
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzkzMDM5MTIxLCJleHAiOjE3OTM2NDM5MjF9.h8E0QlULPUZJU41etRt7OBBKgXn-znF3___-MY-k_2M
+Authorization: Bearer {{token}}
 
 ### Create job
 POST http://localhost:5000/api/jobs
@@ -75,10 +75,6 @@ Authorization: Bearer {{token}}
 ### Delete job
 DELETE http://localhost:5000/api/jobs/1
 Authorization: Bearer {{token}}
-
-
-
-
 
 ### Update profile (email change also needs currentPassword)
 PUT http://localhost:5000/api/auth/profile
