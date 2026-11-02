@@ -1,6 +1,7 @@
 import { useState } from "react";
 import api from "../api/axios";
 import { useAuth } from "../context/useAuth";
+import { LIMITS } from "../utils/constants";
 
 // Two separate forms: one for name/email, one for the password.
 export default function Profile() {
@@ -19,6 +20,9 @@ export default function Profile() {
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
     setProfileMsg({ type: "", text: "" });
+    if (!name.trim()) {
+      return setProfileMsg({ type: "error", text: "Name is required" });
+    }
     setSavingProfile(true);
     try {
       const res = await api.put("/auth/profile", {
@@ -53,6 +57,9 @@ export default function Profile() {
     if (newPassword.length < 8) {
       return setPasswordMsg({ type: "error", text: "New password must be at least 8 characters" });
     }
+    if (newPassword.length > LIMITS.password) {
+      return setPasswordMsg({ type: "error", text: `New password must be at most ${LIMITS.password} characters` });
+    }
     if (newPassword !== confirmPassword) {
       return setPasswordMsg({ type: "error", text: "New passwords do not match" });
     }
@@ -86,10 +93,17 @@ export default function Profile() {
         )}
 
         <label htmlFor="name">Name</label>
-        <input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+        <input id="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={LIMITS.name} required />
 
         <label htmlFor="email">Email</label>
-        <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          maxLength={LIMITS.email}
+          required
+        />
 
         {emailChanged && (
           <>

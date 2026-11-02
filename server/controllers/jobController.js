@@ -1,31 +1,45 @@
 const Job = require("../models/jobModel");
+const { LIMITS, isText, isRealDate, isWebUrl } = require("../utils/validators");
 
 const STATUSES = ["Saved", "Applied", "OA", "Interview", "Offer", "Rejected"];
 const SORT_FIELDS = ["company", "deadline", "created_at", "status"]; // created_at = date added
 const DEFAULT_LIMIT = 10; // jobs per page if the client doesn't say
 const MAX_LIMIT = 50; // so nobody can ask for 1,000,000 rows at once
 
+// Returns an error message if the job data is invalid, otherwise null
 const validateJob = (body) => {
   const { company, job_title, status, job_url, deadline } = body;
 
-  if (!String(company || "").trim()) return "Company is required";
-  if (!String(job_title || "").trim()) return "Job title is required";
-  if (status && !STATUSES.includes(status)) return "Invalid status";
-  if (job_url) {
-    try {
-      new URL(job_url);
-    } catch {
-      return "Invalid job URL";
-    }
+  if (!isText(company) || !company.trim()) return "Company is required";
+  if (company.trim().length > LIMITS.company) return `Company must be at most ${LIMITS.company} characters`;
+  if (!isText(job_title) || !job_title.trim()) return "Job title is required";
+  if (job_title.trim().length > LIMITS.job_title) return `Job title must be at most ${LIMITS.job_title} characters`;
+
+  // Optional text fields: if they are sent they must be text and not too long
+  for (const field of ["location", "salary", "notes"]) {
+    const value = body[field];
+    if (value === undefined || value === null) continue;
+    if (!isText(value)) return `${field} must be text`;
+    if (value.length > LIMITS[field]) return `${field} must be at most ${LIMITS[field]} characters`;
   }
-  if (deadline && isNaN(Date.parse(deadline))) return "Invalid deadline";
+
+  if (status && !STATUSES.includes(status)) return "Invalid status";
+
+  if (job_url) {
+    if (!isText(job_url) || !isWebUrl(job_url.trim())) return "Job URL must start with http:// or https://";
+  }
+  if (deadline) {
+    if (!isText(deadline) || !isRealDate(deadline)) return "Deadline must be a valid date (YYYY-MM-DD)";
+  }
   return null;
 };
 
+// Trim the text fields so " Shopify " is saved as "Shopify"
 const cleanJob = (body) => ({
   ...body,
   company: body.company.trim(),
   job_title: body.job_title.trim(),
+  job_url: body.job_url ? body.job_url.trim() : body.job_url,
 });
 
 const parseId = (req, res) => {

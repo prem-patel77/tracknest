@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import { LIMITS } from "../utils/constants";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -27,6 +28,7 @@ export default function Register() {
     else if (!EMAIL_REGEX.test(email.trim())) newErrors.email = "Please enter a valid email";
     if (!password) newErrors.password = "Password is required";
     else if (password.length < 8) newErrors.password = "Password must be at least 8 characters";
+    else if (password.length > LIMITS.password) newErrors.password = `Password must be at most ${LIMITS.password} characters`;
     if (confirmPassword !== password) newErrors.confirmPassword = "Passwords do not match";
     return newErrors;
   };
@@ -59,7 +61,14 @@ export default function Register() {
         {serverError && <div className="alert-error">{serverError}</div>}
 
         <label htmlFor="name">Name</label>
-        <input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} />
+        <input
+          id="name"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          maxLength={LIMITS.name}
+          autoComplete="name"
+        />
         {errors.name && <p className="field-error">{errors.name}</p>}
 
         <label htmlFor="email">Email</label>
@@ -68,6 +77,8 @@ export default function Register() {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          maxLength={LIMITS.email}
+          autoComplete="email"
         />
         {errors.email && <p className="field-error">{errors.email}</p>}
 
@@ -77,6 +88,8 @@ export default function Register() {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          maxLength={LIMITS.password}
+          autoComplete="new-password"
         />
         {errors.password && <p className="field-error">{errors.password}</p>}
 
@@ -86,6 +99,8 @@ export default function Register() {
           type="password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
+          maxLength={LIMITS.password}
+          autoComplete="new-password"
         />
         {errors.confirmPassword && <p className="field-error">{errors.confirmPassword}</p>}
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { STATUSES } from "../utils/constants";
+import { STATUSES, LIMITS } from "../utils/constants";
 
 // Used by both the Add Job and Edit Job pages.
 // - initialValues: starting field values (empty for "add", the saved job for "edit")
@@ -35,9 +35,10 @@ export default function JobForm({ initialValues = EMPTY_JOB, onSubmit, submitLab
     if (!form.job_title.trim()) newErrors.job_title = "Job title is required";
     if (form.job_url.trim()) {
       try {
-        new URL(form.job_url.trim());
+        const { protocol } = new URL(form.job_url.trim());
+        if (protocol !== "http:" && protocol !== "https:") throw new Error("not a web link");
       } catch {
-        newErrors.job_url = "Please enter a valid URL (include https://)";
+        newErrors.job_url = "Please enter a valid URL starting with http:// or https://";
       }
     }
     return newErrors;
@@ -70,18 +71,18 @@ export default function JobForm({ initialValues = EMPTY_JOB, onSubmit, submitLab
       {serverError && <div className="alert-error">{serverError}</div>}
 
       <label htmlFor="company">Company *</label>
-      <input id="company" name="company" value={form.company} onChange={handleChange} />
+      <input id="company" name="company" value={form.company} onChange={handleChange} maxLength={LIMITS.company} />
       {errors.company && <p className="field-error">{errors.company}</p>}
 
       <label htmlFor="job_title">Job title *</label>
-      <input id="job_title" name="job_title" value={form.job_title} onChange={handleChange} />
+      <input id="job_title" name="job_title" value={form.job_title} onChange={handleChange} maxLength={LIMITS.job_title} />
       {errors.job_title && <p className="field-error">{errors.job_title}</p>}
 
       <label htmlFor="location">Location</label>
-      <input id="location" name="location" value={form.location} onChange={handleChange} />
+      <input id="location" name="location" value={form.location} onChange={handleChange} maxLength={LIMITS.location} />
 
       <label htmlFor="salary">Salary</label>
-      <input id="salary" name="salary" value={form.salary} onChange={handleChange} />
+      <input id="salary" name="salary" value={form.salary} onChange={handleChange} maxLength={LIMITS.salary} />
 
       <label htmlFor="status">Status</label>
       <select id="status" name="status" value={form.status} onChange={handleChange}>
@@ -94,11 +95,11 @@ export default function JobForm({ initialValues = EMPTY_JOB, onSubmit, submitLab
       <input id="deadline" name="deadline" type="date" value={form.deadline} onChange={handleChange} />
 
       <label htmlFor="job_url">Job URL</label>
-      <input id="job_url" name="job_url" value={form.job_url} onChange={handleChange} />
+      <input id="job_url" name="job_url" value={form.job_url} onChange={handleChange} placeholder="https://..." />
       {errors.job_url && <p className="field-error">{errors.job_url}</p>}
 
       <label htmlFor="notes">Notes</label>
-      <textarea id="notes" name="notes" rows="4" value={form.notes} onChange={handleChange} />
+      <textarea id="notes" name="notes" rows="4" value={form.notes} onChange={handleChange} maxLength={LIMITS.notes} />
 
       <div className="form-actions">
         <button type="submit" className="btn btn-inline" disabled={submitting}>
