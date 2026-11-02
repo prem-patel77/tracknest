@@ -1,8 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const { isText, validateName, validateEmail, validateNewPassword } = require("../utils/validators");
 
 const createToken = (userId) =>
   jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
@@ -11,15 +10,8 @@ const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: "Name, email and password are required" });
-    }
-    if (!EMAIL_REGEX.test(email)) {
-      return res.status(400).json({ message: "Please enter a valid email" });
-    }
-    if (password.length < 8) {
-      return res.status(400).json({ message: "Password must be at least 8 characters" });
-    }
+    const error = validateName(name) || validateEmail(email) || validateNewPassword(password);
+    if (error) return res.status(400).json({ message: error });
 
     const normalizedEmail = email.trim().toLowerCase();
     const existing = await User.findByEmail(normalizedEmail);
@@ -41,7 +33,7 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
+    if (!isText(email) || !email.trim() || !isText(password) || !password) {
       return res.status(400).json({ message: "Email and password are required" });
     }
 
@@ -81,12 +73,8 @@ const updateProfile = async (req, res) => {
   try {
     const { name, email, currentPassword } = req.body;
 
-    if (!String(name || "").trim() || !String(email || "").trim()) {
-      return res.status(400).json({ message: "Name and email are required" });
-    }
-    if (!EMAIL_REGEX.test(email.trim())) {
-      return res.status(400).json({ message: "Please enter a valid email" });
-    }
+    const error = validateName(name) || validateEmail(email);
+    if (error) return res.status(400).json({ message: error });
 
     const user = await User.findByIdWithHash(req.userId);
     if (!user) {
@@ -97,7 +85,7 @@ const updateProfile = async (req, res) => {
 
     if (normalizedEmail !== user.email) {
       // The email is changing: prove it is really the owner
-      if (!currentPassword || !(await bcrypt.compare(currentPassword, user.password_hash))) {
+      if (!isText(currentPassword) || !(await bcrypt.compare(currentPassword, user.password_hash))) {
         return res.status(401).json({ message: "Current password is incorrect" });
       }
       const taken = await User.findByEmail(normalizedEmail);
@@ -119,12 +107,11 @@ const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({ message: "Current and new password are required" });
+    if (!isText(currentPassword) || !currentPassword) {
+      return res.status(400).json({ message: "Current password is required" });
     }
-    if (newPassword.length < 8) {
-      return res.status(400).json({ message: "New password must be at least 8 characters" });
-    }
+    const error = validateNewPassword(newPassword, "New password");
+    if (error) return res.status(400).json({ message: error });
 
     const user = await User.findByIdWithHash(req.userId);
     if (!user) {

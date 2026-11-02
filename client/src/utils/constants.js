@@ -22,3 +22,15 @@ export const STATUS_COLORS = {
   Offer: "#22c55e",
   Rejected: "#ef4444",
 };
+
+// Max text lengths (must match server/utils/validators.js and the columns in schema.sql)
+export const LIMITS = {
+  name: 100,
+  email: 255,
+  password: 72,
+  company: 150,
+  job_title: 150,
+  location: 150,
+  salary: 50,
+  notes: 5000,
+};
