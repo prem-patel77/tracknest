@@ -14,7 +14,12 @@ export default function AddJob() {
 
   return (
     <div>
-      <h1>Add Job</h1>
+      <div className="page-header">
+        <div>
+          <h1>Add Job</h1>
+          <p className="page-subtitle">Save a new application to your tracker.</p>
+        </div>
+      </div>
       <JobForm onSubmit={handleSubmit} submitLabel="Add Job" />
     </div>
   );

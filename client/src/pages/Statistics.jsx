@@ -6,6 +6,8 @@ import {
 import api from "../api/axios";
 import PageLoader from "../components/PageLoader";
 import ErrorAlert from "../components/ErrorAlert";
+import EmptyState from "../components/EmptyState";
+import { Link } from "react-router-dom";
 import { STATUSES, STATUS_COLORS } from "../utils/constants";
 import { getErrorMessage } from "../utils/getErrorMessage";
 
@@ -40,11 +42,11 @@ export default function Statistics() {
   // Summary cards. "Active" = still in progress (not rejected, not an offer yet)
   const active = byStatus.Applied + byStatus.OA + byStatus.Interview;
   const cards = [
-    { label: "Total", value: total },
-    { label: "Active", value: active },
-    { label: "Interviews", value: byStatus.Interview },
-    { label: "Offers", value: byStatus.Offer },
-    { label: "Rejected", value: byStatus.Rejected },
+    { label: "Total", value: total, accent: "var(--primary)" },
+    { label: "Active", value: active, accent: STATUS_COLORS.Applied },
+    { label: "Interviews", value: byStatus.Interview, accent: STATUS_COLORS.Interview },
+    { label: "Offers", value: byStatus.Offer, accent: STATUS_COLORS.Offer },
+    { label: "Rejected", value: byStatus.Rejected, accent: STATUS_COLORS.Rejected },
   ];
 
   // Pie chart data: one slice per status that has at least one job
@@ -56,23 +58,28 @@ export default function Statistics() {
   return (
     <div>
       <div className="page-header">
-        <h1>Statistics</h1>
+        <div>
+          <h1>Statistics</h1>
+          <p className="page-subtitle">See how your search is going.</p>
+        </div>
       </div>
 
       <div className="summary-cards">
         {cards.map((card) => (
-          <div className="summary-card" key={card.label}>
-            <div className="summary-value">{card.value}</div>
+          <div className="summary-card" key={card.label} style={{ "--accent": card.accent }}>
             <div className="summary-label">{card.label}</div>
+            <div className="summary-value">{card.value}</div>
           </div>
         ))}
       </div>
 
       {total === 0 ? (
-        <p className="center-text">No data yet. Add some jobs to see your charts!</p>
+        <EmptyState icon="chart" title="No data yet" text="Add some jobs to see your charts.">
+          <Link to="/jobs/new" className="btn btn-inline">Add a job</Link>
+        </EmptyState>
       ) : (
         <div className="chart-grid">
-          <section className="chart-card">
+          <section className="chart-card card">
             <h2>Jobs by status</h2>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -87,7 +94,7 @@ export default function Statistics() {
             </ResponsiveContainer>
           </section>
 
-          <section className="chart-card">
+          <section className="chart-card card">
             <h2>Applications per month</h2>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={barData}>

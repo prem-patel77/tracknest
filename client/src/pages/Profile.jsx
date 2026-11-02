@@ -83,7 +83,10 @@ export default function Profile() {
   return (
     <div>
       <div className="page-header">
-        <h1>Profile</h1>
+        <div>
+          <h1>Profile</h1>
+          <p className="page-subtitle">Manage your account details and password.</p>
+        </div>
       </div>
 
       <form className="form-card profile-card" onSubmit={handleProfileSubmit}>

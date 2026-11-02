@@ -72,29 +72,45 @@ export default function JobForm({ initialValues = EMPTY_JOB, onSubmit, submitLab
     <form className="form-card" onSubmit={handleSubmit} noValidate>
       {serverError && <div className="alert-error" role="alert">{serverError}</div>}
 
-      <label htmlFor="company">Company *</label>
-      <input id="company" name="company" value={form.company} onChange={handleChange} maxLength={LIMITS.company} />
-      {errors.company && <p className="field-error">{errors.company}</p>}
+      {/* .form-row puts two fields side by side on wide screens and stacks them on phones */}
+      <div className="form-row">
+        <div>
+          <label htmlFor="company">Company *</label>
+          <input id="company" name="company" value={form.company} onChange={handleChange} maxLength={LIMITS.company} />
+          {errors.company && <p className="field-error">{errors.company}</p>}
+        </div>
+        <div>
+          <label htmlFor="job_title">Job title *</label>
+          <input id="job_title" name="job_title" value={form.job_title} onChange={handleChange} maxLength={LIMITS.job_title} />
+          {errors.job_title && <p className="field-error">{errors.job_title}</p>}
+        </div>
+      </div>
 
-      <label htmlFor="job_title">Job title *</label>
-      <input id="job_title" name="job_title" value={form.job_title} onChange={handleChange} maxLength={LIMITS.job_title} />
-      {errors.job_title && <p className="field-error">{errors.job_title}</p>}
+      <div className="form-row">
+        <div>
+          <label htmlFor="location">Location</label>
+          <input id="location" name="location" value={form.location} onChange={handleChange} maxLength={LIMITS.location} />
+        </div>
+        <div>
+          <label htmlFor="salary">Salary</label>
+          <input id="salary" name="salary" value={form.salary} onChange={handleChange} maxLength={LIMITS.salary} />
+        </div>
+      </div>
 
-      <label htmlFor="location">Location</label>
-      <input id="location" name="location" value={form.location} onChange={handleChange} maxLength={LIMITS.location} />
-
-      <label htmlFor="salary">Salary</label>
-      <input id="salary" name="salary" value={form.salary} onChange={handleChange} maxLength={LIMITS.salary} />
-
-      <label htmlFor="status">Status</label>
-      <select id="status" name="status" value={form.status} onChange={handleChange}>
-        {STATUSES.map((s) => (
-          <option key={s} value={s}>{s}</option>
-        ))}
-      </select>
-
-      <label htmlFor="deadline">Deadline</label>
-      <input id="deadline" name="deadline" type="date" value={form.deadline} onChange={handleChange} />
+      <div className="form-row">
+        <div>
+          <label htmlFor="status">Status</label>
+          <select id="status" name="status" value={form.status} onChange={handleChange}>
+            {STATUSES.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="deadline">Deadline</label>
+          <input id="deadline" name="deadline" type="date" value={form.deadline} onChange={handleChange} />
+        </div>
+      </div>
 
       <label htmlFor="job_url">Job URL</label>
       <input id="job_url" name="job_url" value={form.job_url} onChange={handleChange} placeholder="https://..." />
