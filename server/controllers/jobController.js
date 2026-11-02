@@ -2,6 +2,8 @@ const Job = require("../models/jobModel");
 
 const STATUSES = ["Saved", "Applied", "OA", "Interview", "Offer", "Rejected"];
 const SORT_FIELDS = ["company", "deadline", "created_at", "status"]; // created_at = date added
+const DEFAULT_LIMIT = 10; // jobs per page if the client doesn't say
+const MAX_LIMIT = 50; // so nobody can ask for 1,000,000 rows at once
 
 const validateJob = (body) => {
   const { company, job_title, status, job_url, deadline } = body;
@@ -52,17 +54,35 @@ const parseListQuery = (query) => {
   const order = query.order || "desc";
   if (!["asc", "desc"].includes(order)) return { error: "Invalid order" };
 
-  return { filters: { search, status, sortBy, order } };
+  // Pagination: page starts at 1, limit is how many jobs per page (1 to MAX_LIMIT)
+  const page = query.page === undefined ? 1 : Number(query.page);
+  if (!Number.isInteger(page) || page < 1) return { error: "Invalid page" };
+
+  const limit = query.limit === undefined ? DEFAULT_LIMIT : Number(query.limit);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_LIMIT) {
+    return { error: `Limit must be between 1 and ${MAX_LIMIT}` };
+  }
+
+  return { filters: { search, status, sortBy, order, page, limit } };
 };
 
-// GET /api/jobs?search=shopify&status=Applied&sortBy=deadline&order=asc
+// GET /api/jobs?search=shopify&status=Applied&sortBy=deadline&order=asc&page=2&limit=10
 const getJobs = async (req, res) => {
   try {
     const { error, filters } = parseListQuery(req.query);
     if (error) return res.status(400).json({ message: error });
 
-    const jobs = await Job.getAllByUser(req.userId, filters);
-    res.json({ jobs });
+    const { jobs, total } = await Job.getAllByUser(req.userId, filters);
+
+    res.json({
+      jobs,
+      pagination: {
+        page: filters.page,
+        limit: filters.limit,
+        total, // jobs matching the search/filter, across all pages
+        totalPages: Math.max(1, Math.ceil(total / filters.limit)),
+      },
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });

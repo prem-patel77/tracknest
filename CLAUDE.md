@@ -12,7 +12,7 @@ Full-stack job application tracker (portfolio project for internship application
 - After each step, briefly explain what you changed and why.
 
 ## Progress
-Phases 1-13 done. Next: deploy, then Chunk 2
+Phases 1-13 done and deployed (Vercel + Render + Neon). Pushing to main auto-redeploys both. Phases 14-17 (Chunk 2) done locally, not pushed yet. Next: Chunk 3.
 
 ## Roadmap (build in chunks; I will say which chunk to do)
 - Chunk 1 (Phases 10-13): Dashboard layout (sidebar, navbar, summary cards, job table), Add Job form, Edit Job, Delete with confirmation popup.
