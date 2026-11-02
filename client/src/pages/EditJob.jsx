@@ -54,7 +54,12 @@ export default function EditJob() {
 
   return (
     <div>
-      <h1>Edit Job</h1>
+      <div className="page-header">
+        <div>
+          <h1>Edit Job</h1>
+          <p className="page-subtitle">Update the details or move it to the next stage.</p>
+        </div>
+      </div>
       {/* Only rendered after the job has loaded, so the form starts with the saved values */}
       <JobForm initialValues={job} onSubmit={handleSubmit} submitLabel="Save Changes" />
     </div>

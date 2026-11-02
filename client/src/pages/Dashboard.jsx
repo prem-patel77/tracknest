@@ -4,7 +4,10 @@ import api from "../api/axios";
 import StatusBadge from "../components/StatusBadge";
 import ConfirmModal from "../components/ConfirmModal";
 import ErrorAlert from "../components/ErrorAlert";
-import { STATUSES, SORT_OPTIONS } from "../utils/constants";
+import EmptyState from "../components/EmptyState";
+import { Icon } from "../components/Icons";
+import { STATUSES, SORT_OPTIONS, STATUS_COLORS } from "../utils/constants";
+import { describeDeadline, avatarColors } from "../utils/format";
 import { getErrorMessage } from "../utils/getErrorMessage";
 
 export default function Dashboard() {
@@ -106,22 +109,36 @@ export default function Dashboard() {
     }
   };
 
+  // Summary cards; "accent" is the small colored dot next to the label
   const cards = [
-    { label: "Total", value: stats.total },
-    { label: "Applied", value: stats.byStatus.Applied ?? 0 },
-    { label: "Interview", value: stats.byStatus.Interview ?? 0 },
-    { label: "Offer", value: stats.byStatus.Offer ?? 0 },
-    { label: "Rejected", value: stats.byStatus.Rejected ?? 0 },
+    { label: "Total", value: stats.total, accent: "var(--primary)" },
+    { label: "Applied", value: stats.byStatus.Applied ?? 0, accent: STATUS_COLORS.Applied },
+    { label: "Interview", value: stats.byStatus.Interview ?? 0, accent: STATUS_COLORS.Interview },
+    { label: "Offer", value: stats.byStatus.Offer ?? 0, accent: STATUS_COLORS.Offer },
+    { label: "Rejected", value: stats.byStatus.Rejected ?? 0, accent: STATUS_COLORS.Rejected },
   ];
 
   // True when the user is filtering, so we can show a different "empty" message
   const isFiltering = search !== "" || status !== "All";
 
+  // Reset the search box and the status dropdown (used by the "Clear filters" button)
+  const clearFilters = () => {
+    setSearchInput("");
+    setSearch("");
+    changeStatus("All");
+  };
+
   return (
     <div>
       <div className="page-header">
-        <h1>Dashboard</h1>
-        <Link to="/jobs/new" className="btn btn-inline">+ Add Job</Link>
+        <div>
+          <h1>Dashboard</h1>
+          <p className="page-subtitle">Track every application in one place.</p>
+        </div>
+        <Link to="/jobs/new" className="btn btn-inline">
+          <Icon name="plus" size={16} />
+          Add Job
+        </Link>
       </div>
 
       {/* "Try again" reloads both the totals and the list */}
@@ -136,30 +153,33 @@ export default function Dashboard() {
 
       <div className="summary-cards">
         {cards.map((card) => (
-          <div className="summary-card" key={card.label}>
+          <div className="summary-card" key={card.label} style={{ "--accent": card.accent }}>
+            <div className="summary-label">{card.label}</div>
             <div className="summary-value">
               {statsLoading ? <span className="skeleton skeleton-value" /> : card.value}
             </div>
-            <div className="summary-label">{card.label}</div>
           </div>
         ))}
       </div>
 
       <div className="toolbar">
-        <input
-          type="search"
-          className="toolbar-search"
-          placeholder="Search by company or position..."
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-        />
-        <select value={status} onChange={(e) => changeStatus(e.target.value)}>
+        <div className="search-box toolbar-search">
+          <Icon name="search" size={16} />
+          <input
+            type="search"
+            placeholder="Search by company or position..."
+            aria-label="Search by company or position"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+          />
+        </div>
+        <select aria-label="Filter by status" value={status} onChange={(e) => changeStatus(e.target.value)}>
           <option value="All">All statuses</option>
           {STATUSES.map((s) => (
             <option key={s} value={s}>{s}</option>
           ))}
         </select>
-        <select value={sort} onChange={(e) => changeSort(e.target.value)}>
+        <select aria-label="Sort jobs" value={sort} onChange={(e) => changeSort(e.target.value)}>
           {SORT_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
@@ -168,12 +188,12 @@ export default function Dashboard() {
 
       {loading ? (
         // First load: grey placeholder rows in the shape of the table
-        <div className="table-wrap" aria-busy="true">
+        <div className="table-wrap card" aria-busy="true">
           <table className="job-table">
             <tbody>
               {[1, 2, 3, 4, 5].map((n) => (
                 <tr key={n}>
-                  {[1, 2, 3, 4, 5].map((c) => (
+                  {[1, 2, 3, 4, 5, 6].map((c) => (
                     <td key={c}><span className="skeleton skeleton-text" /></td>
                   ))}
                 </tr>
@@ -182,14 +202,25 @@ export default function Dashboard() {
           </table>
         </div>
       ) : jobs.length === 0 && error ? null : jobs.length === 0 ? (
-        <p className="center-text">
-          {isFiltering
-            ? "No jobs match your search or filter."
-            : 'No jobs yet. Click "Add Job" to track your first application!'}
-        </p>
+        isFiltering ? (
+          <EmptyState icon="search" title="No matching jobs" text="Try a different search word or status.">
+            <button className="btn btn-inline btn-outline" onClick={clearFilters}>Clear filters</button>
+          </EmptyState>
+        ) : (
+          <EmptyState
+            icon="briefcase"
+            title="No applications yet"
+            text="Add your first job to start tracking your internship search."
+          >
+            <Link to="/jobs/new" className="btn btn-inline">
+              <Icon name="plus" size={16} />
+              Add your first job
+            </Link>
+          </EmptyState>
+        )
       ) : (
         // While a new page/filter is loading, keep the old rows but fade them out
-        <div className={fetching ? "table-wrap is-fetching" : "table-wrap"}>
+        <div className={fetching ? "table-wrap card is-fetching" : "table-wrap card"}>
           <table className="job-table">
             <thead>
               <tr>
@@ -198,25 +229,52 @@ export default function Dashboard() {
                 <th>Location</th>
                 <th>Status</th>
                 <th>Deadline</th>
-                <th>Actions</th>
+                <th className="col-actions">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {jobs.map((job) => (
-                <tr key={job.id}>
-                  <td>{job.company}</td>
-                  <td>{job.job_title}</td>
-                  <td>{job.location || "-"}</td>
-                  <td><StatusBadge status={job.status} /></td>
-                  <td>{job.deadline || "-"}</td>
-                  <td>
-                    <Link to={`/jobs/${job.id}/edit`} className="link-action">Edit</Link>
-                    <button className="link-action link-danger" onClick={() => setJobToDelete(job)}>
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {jobs.map((job) => {
+                const deadline = describeDeadline(job.deadline, job.status);
+                return (
+                  <tr key={job.id}>
+                    <td>
+                      <div className="company-cell">
+                        <span className="company-avatar" style={avatarColors(job.company)}>
+                          {job.company.charAt(0).toUpperCase()}
+                        </span>
+                        <span className="company-name">{job.company}</span>
+                      </div>
+                    </td>
+                    <td>{job.job_title}</td>
+                    <td className="text-muted">{job.location || "-"}</td>
+                    <td><StatusBadge status={job.status} /></td>
+                    <td>
+                      <span className={deadline.tone ? `deadline deadline-${deadline.tone}` : "deadline"}>
+                        {deadline.label}
+                      </span>
+                      {deadline.hint && <span className={`cell-sub deadline-${deadline.tone}`}>{deadline.hint}</span>}
+                    </td>
+                    <td className="col-actions">
+                      <Link
+                        to={`/jobs/${job.id}/edit`}
+                        className="icon-btn"
+                        title="Edit"
+                        aria-label={`Edit ${job.job_title} at ${job.company}`}
+                      >
+                        <Icon name="edit" size={16} />
+                      </Link>
+                      <button
+                        className="icon-btn icon-btn-danger"
+                        title="Delete"
+                        aria-label={`Delete ${job.job_title} at ${job.company}`}
+                        onClick={() => setJobToDelete(job)}
+                      >
+                        <Icon name="trash" size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import Spinner from "../components/Spinner";
+import Brand from "../components/Brand";
 import { LIMITS } from "../utils/constants";
 import { getErrorMessage } from "../utils/getErrorMessage";
 
@@ -58,7 +59,9 @@ export default function Register() {
   return (
     <div className="auth-page">
       <form className="auth-card" onSubmit={handleSubmit} noValidate>
+        <Brand />
         <h1>Create account</h1>
+        <p className="auth-subtitle">Start tracking your internship applications.</p>
 
         {serverError && <div className="alert-error" role="alert">{serverError}</div>}
 
