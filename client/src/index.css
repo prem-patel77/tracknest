@@ -595,3 +595,12 @@ a.btn {
 .status-card { text-align: center; }
 .status-code { font-size: 4rem; font-weight: 800; color: var(--primary); line-height: 1; }
 .empty-state { text-align: center; padding: 64px 16px; }
+
+/* ---------- Loading states (Phase 24) ---------- */
+.skeleton { display: inline-block; background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: 4px; }
+.skeleton-text { width: 100%; min-width: 80px; height: 14px; }
+.skeleton-value { width: 40px; height: 28px; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+.is-fetching { opacity: 0.55; pointer-events: none; transition: opacity 0.15s; }
+.is-disabled { opacity: 0.6; pointer-events: none; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }

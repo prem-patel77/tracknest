@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import api from "../api/axios";
 import JobForm from "../components/JobForm";
+import PageLoader from "../components/PageLoader";
+import ErrorAlert from "../components/ErrorAlert";
 import { getErrorMessage } from "../utils/getErrorMessage";
 
 export default function EditJob() {
@@ -39,12 +41,12 @@ export default function EditJob() {
     navigate("/dashboard");
   };
 
-  if (loading) return <p className="center-text">Loading...</p>;
+  if (loading) return <PageLoader text="Loading job..." />;
 
   if (error) {
     return (
       <div>
-        <div className="alert-error">{error}</div>
+        <ErrorAlert message={error} />
         <p><Link to="/dashboard">Back to dashboard</Link></p>
       </div>
     );

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import Spinner from "../components/Spinner";
 import { getErrorMessage } from "../utils/getErrorMessage";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -79,6 +80,7 @@ export default function Login() {
         {errors.password && <p className="field-error">{errors.password}</p>}
 
         <button type="submit" className="btn" disabled={submitting}>
+          {submitting && <Spinner small />}
           {submitting ? "Logging in..." : "Log in"}
         </button>
 

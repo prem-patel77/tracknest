@@ -1,6 +1,7 @@
 import { useState } from "react";
 import api from "../api/axios";
 import { useAuth } from "../context/useAuth";
+import Spinner from "../components/Spinner";
 import { LIMITS } from "../utils/constants";
 import { getErrorMessage } from "../utils/getErrorMessage";
 
@@ -122,6 +123,7 @@ export default function Profile() {
 
         <div className="form-actions">
           <button className="btn btn-inline" disabled={savingProfile}>
+            {savingProfile && <Spinner small />}
             {savingProfile ? "Saving..." : "Save changes"}
           </button>
         </div>
@@ -167,6 +169,7 @@ export default function Profile() {
 
         <div className="form-actions">
           <button className="btn btn-inline" disabled={savingPassword}>
+            {savingPassword && <Spinner small />}
             {savingPassword ? "Updating..." : "Update password"}
           </button>
         </div>

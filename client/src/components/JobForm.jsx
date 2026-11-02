@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { STATUSES, LIMITS } from "../utils/constants";
+import Spinner from "./Spinner";
 import { getErrorMessage } from "../utils/getErrorMessage";
 
 // Used by both the Add Job and Edit Job pages.
@@ -69,7 +70,7 @@ export default function JobForm({ initialValues = EMPTY_JOB, onSubmit, submitLab
 
   return (
     <form className="form-card" onSubmit={handleSubmit} noValidate>
-      {serverError && <div className="alert-error">{serverError}</div>}
+      {serverError && <div className="alert-error" role="alert">{serverError}</div>}
 
       <label htmlFor="company">Company *</label>
       <input id="company" name="company" value={form.company} onChange={handleChange} maxLength={LIMITS.company} />
@@ -104,9 +105,17 @@ export default function JobForm({ initialValues = EMPTY_JOB, onSubmit, submitLab
 
       <div className="form-actions">
         <button type="submit" className="btn btn-inline" disabled={submitting}>
+          {submitting && <Spinner small />}
           {submitting ? "Saving..." : submitLabel}
         </button>
-        <Link to="/dashboard" className="btn btn-inline btn-outline">Cancel</Link>
+        <Link
+          to="/dashboard"
+          className={submitting ? "btn btn-inline btn-outline is-disabled" : "btn btn-inline btn-outline"}
+          aria-disabled={submitting}
+          onClick={(e) => submitting && e.preventDefault()}
+        >
+          Cancel
+        </Link>
       </div>
     </form>
   );

@@ -4,6 +4,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer,
 } from "recharts";
 import api from "../api/axios";
+import PageLoader from "../components/PageLoader";
+import ErrorAlert from "../components/ErrorAlert";
 import { STATUSES, STATUS_COLORS } from "../utils/constants";
 import { getErrorMessage } from "../utils/getErrorMessage";
 
@@ -19,15 +21,19 @@ export default function Statistics() {
   const [error, setError] = useState("");
 
   // Same endpoint the dashboard cards use; it also returns the per-month counts
-  useEffect(() => {
+  const loadStats = () => {
     api
       .get("/jobs/stats")
-      .then((res) => setStats(res.data))
+      .then((res) => {
+        setStats(res.data);
+        setError("");
+      })
       .catch((err) => setError(getErrorMessage(err, "Could not load statistics")));
-  }, []);
+  };
+  useEffect(loadStats, []);
 
-  if (error) return <div className="alert-error">{error}</div>;
-  if (!stats) return <p className="center-text">Loading...</p>;
+  if (error) return <ErrorAlert message={error} onRetry={loadStats} />;
+  if (!stats) return <PageLoader text="Loading statistics..." />;
 
   const { total, byStatus, byMonth } = stats;
 

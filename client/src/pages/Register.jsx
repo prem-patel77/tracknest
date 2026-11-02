@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import Spinner from "../components/Spinner";
 import { LIMITS } from "../utils/constants";
 import { getErrorMessage } from "../utils/getErrorMessage";
 
@@ -59,7 +60,7 @@ export default function Register() {
       <form className="auth-card" onSubmit={handleSubmit} noValidate>
         <h1>Create account</h1>
 
-        {serverError && <div className="alert-error">{serverError}</div>}
+        {serverError && <div className="alert-error" role="alert">{serverError}</div>}
 
         <label htmlFor="name">Name</label>
         <input
@@ -106,6 +107,7 @@ export default function Register() {
         {errors.confirmPassword && <p className="field-error">{errors.confirmPassword}</p>}
 
         <button type="submit" className="btn" disabled={submitting}>
+          {submitting && <Spinner small />}
           {submitting ? "Creating account..." : "Register"}
         </button>
 
