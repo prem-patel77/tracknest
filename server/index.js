@@ -7,7 +7,14 @@ const cors = require("cors");
 
 const app = express();
 
-app.use(cors());
+// Allowed frontend origins come from CLIENT_URL (comma-separated), e.g.
+// "https://tracknest.vercel.app,http://localhost:5173". Defaults to local dev.
+const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim().replace(/\/$/, "")) // drop spaces and a trailing slash
+  .filter(Boolean);
+
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/jobs", jobRoutes);
