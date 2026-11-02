@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import api from "../api/axios";
 import StatusBadge from "../components/StatusBadge";
 import ConfirmModal from "../components/ConfirmModal";
+import { STATUSES } from "../utils/constants";
 
 export default function Dashboard() {
   const [jobs, setJobs] = useState([]);
@@ -18,6 +19,7 @@ export default function Dashboard() {
   // search = the value we actually send to the server (updated shortly after typing stops)
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("All"); // status filter dropdown
 
   // Wait 300ms after the user stops typing, so we don't call the API on every key press
   useEffect(() => {
@@ -33,10 +35,10 @@ export default function Dashboard() {
       .catch((err) => setError(err.response?.data?.message || "Could not load totals"));
   };
 
-  // Load the jobs from the server whenever the search changes
+  // Load the jobs from the server whenever the search or status filter changes
   const loadJobs = () => {
     api
-      .get("/jobs", { params: { search } })
+      .get("/jobs", { params: { search, status } })
       .then((res) => {
         setJobs(res.data.jobs);
         setError("");
@@ -46,7 +48,7 @@ export default function Dashboard() {
   };
 
   useEffect(loadStats, []); // totals: once, when the page opens
-  useEffect(loadJobs, [search]); // jobs: again every time the search changes
+  useEffect(loadJobs, [search, status]); // jobs: again every time a filter changes
 
   // Called when the user clicks "Delete" in the popup
   const confirmDelete = async () => {
@@ -73,7 +75,7 @@ export default function Dashboard() {
   ];
 
   // True when the user is filtering, so we can show a different "empty" message
-  const isFiltering = search !== "";
+  const isFiltering = search !== "" || status !== "All";
 
   return (
     <div>
@@ -101,6 +103,12 @@ export default function Dashboard() {
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
         />
+        <select value={status} onChange={(e) => setStatus(e.target.value)}>
+          <option value="All">All statuses</option>
+          {STATUSES.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
       </div>
 
       {loading ? (
@@ -108,7 +116,7 @@ export default function Dashboard() {
       ) : jobs.length === 0 ? (
         <p className="center-text">
           {isFiltering
-            ? "No jobs match your search."
+            ? "No jobs match your search or filter."
             : 'No jobs yet. Click "Add Job" to track your first application!'}
         </p>
       ) : (
