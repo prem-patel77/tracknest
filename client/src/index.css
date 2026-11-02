@@ -574,3 +574,17 @@ a.btn {
     padding: 20px;
   }
 }
+
+/* ---------- Spinner (temporary; moved into the main styles in the polish phase) ---------- */
+.spinner {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+.spinner-small { width: 16px; height: 16px; border-width: 2px; border-color: rgba(255,255,255,0.4); border-top-color: #fff; }
+.page-loader { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 64px 16px; color: #64748b; }
+@keyframes spin { to { transform: rotate(360deg); } }

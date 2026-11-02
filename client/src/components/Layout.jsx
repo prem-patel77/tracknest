@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 
 // The frame shared by all logged-in pages: sidebar on the left,
 // navbar on top, and the current page (<Outlet />) in the middle.

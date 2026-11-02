@@ -1,6 +1,6 @@
 import { useState } from "react";
 import api from "../api/axios";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 
 // Two separate forms: one for name/email, one for the password.
 export default function Profile() {
