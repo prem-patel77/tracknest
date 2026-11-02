@@ -4,15 +4,22 @@
 //   npm run seed
 //
 // Safe to run more than once: if the demo user already exists it does nothing.
-// It only ever INSERTs rows that belong to the demo user. It never reads, updates
+//
+//   npm run seed -- --reset
+//
+// With --reset, the demo user's jobs are deleted and the 14 sample jobs are created
+// again (fresh dates), and the demo name/password are restored. Visitors can add, edit
+// and delete demo jobs, so this puts the demo back to a clean state.
+// It only ever touches rows that belong to the demo user. It never reads, updates
 // or deletes any other user's data.
 
 require("dotenv").config();
 const bcrypt = require("bcryptjs");
 const pool = require("../config/db");
+const { DEMO_EMAIL } = require("../utils/demo");
 
+const RESET = process.argv.includes("--reset");
 const DEMO_NAME = "Demo User";
-const DEMO_EMAIL = "demo@tracknest.dev";
 const DEMO_PASSWORD = "Demo1234!";
 
 // monthsAgo: 0 = this month, 5 = five months ago  -> spreads created_at over the last 6 months
@@ -63,8 +70,9 @@ const deadlineFor = (daysFromNow) => {
 
 const seed = async () => {
   const existing = await pool.query("SELECT id FROM users WHERE email = $1", [DEMO_EMAIL]);
-  if (existing.rows.length > 0) {
+  if (existing.rows.length > 0 && !RESET) {
     console.log(`Demo user ${DEMO_EMAIL} already exists (id ${existing.rows[0].id}). Nothing to do.`);
+    console.log("To wipe the demo jobs and re-create them, run: npm run seed -- --reset");
     return;
   }
 
@@ -75,18 +83,27 @@ const seed = async () => {
   try {
     await client.query("BEGIN");
 
-    // ON CONFLICT DO NOTHING protects against two seed runs happening at the same moment
-    const userResult = await client.query(
-      `INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3)
-       ON CONFLICT (email) DO NOTHING RETURNING id`,
-      [DEMO_NAME, DEMO_EMAIL, passwordHash]
-    );
-    if (userResult.rows.length === 0) {
-      await client.query("ROLLBACK");
-      console.log("Demo user was created by someone else just now. Nothing to do.");
-      return;
+    let userId;
+    if (existing.rows.length > 0) {
+      // --reset: keep the demo user row, put back its name/password, and delete ONLY its jobs
+      userId = existing.rows[0].id;
+      await client.query("UPDATE users SET name = $1, password_hash = $2 WHERE id = $3", [DEMO_NAME, passwordHash, userId]);
+      const deleted = await client.query("DELETE FROM jobs WHERE user_id = $1", [userId]);
+      console.log(`Reset: removed ${deleted.rowCount} old demo jobs.`);
+    } else {
+      // ON CONFLICT DO NOTHING protects against two seed runs happening at the same moment
+      const userResult = await client.query(
+        `INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3)
+         ON CONFLICT (email) DO NOTHING RETURNING id`,
+        [DEMO_NAME, DEMO_EMAIL, passwordHash]
+      );
+      if (userResult.rows.length === 0) {
+        await client.query("ROLLBACK");
+        console.log("Demo user was created by someone else just now. Nothing to do.");
+        return;
+      }
+      userId = userResult.rows[0].id;
     }
-    const userId = userResult.rows[0].id;
 
     for (const job of JOBS) {
       const createdAt = createdAtFor(job.monthsAgo, job.day);
