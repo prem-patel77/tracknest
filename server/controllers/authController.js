@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
+const { isDemoEmail, DEMO_LOCKED_MESSAGE } = require("../utils/demo");
 const { isText, validateName, validateEmail, validateNewPassword } = require("../utils/validators");
 
 const createToken = (userId) =>
@@ -80,6 +81,10 @@ const updateProfile = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+    // The shared demo account cannot be edited (403 = understood, but not allowed)
+    if (isDemoEmail(user.email)) {
+      return res.status(403).json({ message: DEMO_LOCKED_MESSAGE });
+    }
 
     const normalizedEmail = email.trim().toLowerCase();
 
@@ -116,6 +121,9 @@ const changePassword = async (req, res) => {
     const user = await User.findByIdWithHash(req.userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
+    }
+    if (isDemoEmail(user.email)) {
+      return res.status(403).json({ message: DEMO_LOCKED_MESSAGE });
     }
     if (!(await bcrypt.compare(currentPassword, user.password_hash))) {
       return res.status(401).json({ message: "Current password is incorrect" });
