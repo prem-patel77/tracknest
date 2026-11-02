@@ -34,10 +34,35 @@ const parseId = (req, res) => {
   return id;
 };
 
+// GET /api/jobs?search=shopify
 const getJobs = async (req, res) => {
   try {
-    const jobs = await Job.getAllByUser(req.userId);
+    // Query params are strings from the URL; trim spaces and ignore anything that isn't text
+    const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
+
+    const jobs = await Job.getAllByUser(req.userId, { search });
     res.json({ jobs });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// GET /api/jobs/stats -> { total: 12, byStatus: { Saved: 2, Applied: 5, ... } }
+// Always counts every job the user has, no matter what the list is filtered by
+const getJobStats = async (req, res) => {
+  try {
+    const rows = await Job.getStatusCounts(req.userId);
+
+    // Start every status at 0 so the client never gets a missing key
+    const byStatus = Object.fromEntries(STATUSES.map((s) => [s, 0]));
+    let total = 0;
+    rows.forEach((row) => {
+      byStatus[row.status] = row.count;
+      total += row.count;
+    });
+
+    res.json({ total, byStatus });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -105,4 +130,4 @@ const deleteJob = async (req, res) => {
   }
 };
 
-module.exports = { getJobs, getJob, createJob, updateJob, deleteJob };
+module.exports = { getJobs, getJobStats, getJob, createJob, updateJob, deleteJob };

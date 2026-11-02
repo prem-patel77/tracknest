@@ -1,8 +1,31 @@
 const pool = require("../config/db");
 
-const getAllByUser = async (userId) => {
+// Make user text safe to use inside ILIKE (so "%" and "_" are treated as normal characters)
+const escapeLike = (text) => text.replace(/[\\%_]/g, "\\$&");
+
+// Get the user's jobs, optionally filtered by a search word
+// The search matches the company OR the position (job title), ignoring upper/lower case
+const getAllByUser = async (userId, { search } = {}) => {
+  const conditions = ["user_id = $1"];
+  const values = [userId];
+
+  if (search) {
+    values.push(`%${escapeLike(search)}%`);
+    // $2 is the search pattern; values are passed separately so SQL injection is impossible
+    conditions.push(`(company ILIKE $${values.length} OR job_title ILIKE $${values.length})`);
+  }
+
   const result = await pool.query(
-    "SELECT * FROM jobs WHERE user_id = $1 ORDER BY created_at DESC",
+    `SELECT * FROM jobs WHERE ${conditions.join(" AND ")} ORDER BY created_at DESC`,
+    values
+  );
+  return result.rows;
+};
+
+// Count ALL of the user's jobs per status (ignores search/filters) for the summary cards
+const getStatusCounts = async (userId) => {
+  const result = await pool.query(
+    "SELECT status, COUNT(*)::int AS count FROM jobs WHERE user_id = $1 GROUP BY status",
     [userId]
   );
   return result.rows;
@@ -69,4 +92,4 @@ const remove = async (id, userId) => {
   return result.rows[0];
 };
 
-module.exports = { getAllByUser, getOne, create, update, remove };
+module.exports = { getAllByUser, getStatusCounts, getOne, create, update, remove };

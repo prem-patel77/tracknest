@@ -11,22 +11,51 @@ export default function Dashboard() {
   const [jobToDelete, setJobToDelete] = useState(null); // job waiting for confirmation
   const [deleting, setDeleting] = useState(false);
 
-  // Load all of the user's jobs once, when the page opens
+  // Totals for the summary cards (always ALL of the user's jobs, not just the ones shown)
+  const [stats, setStats] = useState({ total: 0, byStatus: {} });
+
+  // searchInput = what is typed in the box right now
+  // search = the value we actually send to the server (updated shortly after typing stops)
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+
+  // Wait 300ms after the user stops typing, so we don't call the API on every key press
   useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput.trim()), 300);
+    return () => clearTimeout(timer); // typing again cancels the previous timer
+  }, [searchInput]);
+
+  // Load the summary card totals
+  const loadStats = () => {
     api
-      .get("/jobs")
-      .then((res) => setJobs(res.data.jobs))
+      .get("/jobs/stats")
+      .then((res) => setStats(res.data))
+      .catch((err) => setError(err.response?.data?.message || "Could not load totals"));
+  };
+
+  // Load the jobs from the server whenever the search changes
+  const loadJobs = () => {
+    api
+      .get("/jobs", { params: { search } })
+      .then((res) => {
+        setJobs(res.data.jobs);
+        setError("");
+      })
       .catch((err) => setError(err.response?.data?.message || "Could not load jobs"))
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(loadStats, []); // totals: once, when the page opens
+  useEffect(loadJobs, [search]); // jobs: again every time the search changes
 
   // Called when the user clicks "Delete" in the popup
   const confirmDelete = async () => {
     setDeleting(true);
     try {
       await api.delete(`/jobs/${jobToDelete.id}`);
-      // Remove it from the list on screen (no need to reload everything)
-      setJobs(jobs.filter((j) => j.id !== jobToDelete.id));
+      // Reload from the server so the list and the totals are both correct
+      loadJobs();
+      loadStats();
     } catch (err) {
       setError(err.response?.data?.message || "Could not delete job");
     } finally {
@@ -35,16 +64,16 @@ export default function Dashboard() {
     }
   };
 
-  // Count how many jobs have a given status (for the summary cards)
-  const countByStatus = (status) => jobs.filter((j) => j.status === status).length;
-
   const cards = [
-    { label: "Total", value: jobs.length },
-    { label: "Applied", value: countByStatus("Applied") },
-    { label: "Interview", value: countByStatus("Interview") },
-    { label: "Offer", value: countByStatus("Offer") },
-    { label: "Rejected", value: countByStatus("Rejected") },
+    { label: "Total", value: stats.total },
+    { label: "Applied", value: stats.byStatus.Applied ?? 0 },
+    { label: "Interview", value: stats.byStatus.Interview ?? 0 },
+    { label: "Offer", value: stats.byStatus.Offer ?? 0 },
+    { label: "Rejected", value: stats.byStatus.Rejected ?? 0 },
   ];
+
+  // True when the user is filtering, so we can show a different "empty" message
+  const isFiltering = search !== "";
 
   return (
     <div>
@@ -64,10 +93,24 @@ export default function Dashboard() {
         ))}
       </div>
 
+      <div className="toolbar">
+        <input
+          type="search"
+          className="toolbar-search"
+          placeholder="Search by company or position..."
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+        />
+      </div>
+
       {loading ? (
         <p className="center-text">Loading...</p>
       ) : jobs.length === 0 ? (
-        <p className="center-text">No jobs yet. Click "Add Job" to track your first application!</p>
+        <p className="center-text">
+          {isFiltering
+            ? "No jobs match your search."
+            : 'No jobs yet. Click "Add Job" to track your first application!'}
+        </p>
       ) : (
         <div className="table-wrap">
           <table className="job-table">
