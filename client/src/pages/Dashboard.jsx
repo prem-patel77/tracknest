@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import api from "../api/axios";
 import StatusBadge from "../components/StatusBadge";
 import ConfirmModal from "../components/ConfirmModal";
-import { STATUSES } from "../utils/constants";
+import { STATUSES, SORT_OPTIONS } from "../utils/constants";
 
 export default function Dashboard() {
   const [jobs, setJobs] = useState([]);
@@ -20,6 +20,7 @@ export default function Dashboard() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All"); // status filter dropdown
+  const [sort, setSort] = useState("created_at:desc"); // "field:direction"
 
   // Wait 300ms after the user stops typing, so we don't call the API on every key press
   useEffect(() => {
@@ -35,10 +36,11 @@ export default function Dashboard() {
       .catch((err) => setError(err.response?.data?.message || "Could not load totals"));
   };
 
-  // Load the jobs from the server whenever the search or status filter changes
+  // Load the jobs from the server whenever the search, filter or sorting changes
   const loadJobs = () => {
+    const [sortBy, order] = sort.split(":"); // "deadline:asc" -> "deadline", "asc"
     api
-      .get("/jobs", { params: { search, status } })
+      .get("/jobs", { params: { search, status, sortBy, order } })
       .then((res) => {
         setJobs(res.data.jobs);
         setError("");
@@ -48,7 +50,7 @@ export default function Dashboard() {
   };
 
   useEffect(loadStats, []); // totals: once, when the page opens
-  useEffect(loadJobs, [search, status]); // jobs: again every time a filter changes
+  useEffect(loadJobs, [search, status, sort]); // jobs: again every time a filter or sort changes
 
   // Called when the user clicks "Delete" in the popup
   const confirmDelete = async () => {
@@ -107,6 +109,11 @@ export default function Dashboard() {
           <option value="All">All statuses</option>
           {STATUSES.map((s) => (
             <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+        <select value={sort} onChange={(e) => setSort(e.target.value)}>
+          {SORT_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
           ))}
         </select>
       </div>

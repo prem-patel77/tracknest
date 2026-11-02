@@ -3,9 +3,24 @@ const pool = require("../config/db");
 // Make user text safe to use inside ILIKE (so "%" and "_" are treated as normal characters)
 const escapeLike = (text) => text.replace(/[\\%_]/g, "\\$&");
 
-// Get the user's jobs, optionally filtered by a search word and/or a status
+// The only ways a list can be sorted. The key comes from the URL, but the SQL text comes
+// from this object, so user input is never pasted into the query (prevents SQL injection).
+const SORT_COLUMNS = {
+  company: "LOWER(company)",
+  deadline: "deadline",
+  created_at: "created_at",
+  // Sort statuses in pipeline order (Saved -> Rejected) instead of alphabetically
+  status:
+    "CASE status WHEN 'Saved' THEN 1 WHEN 'Applied' THEN 2 WHEN 'OA' THEN 3 " +
+    "WHEN 'Interview' THEN 4 WHEN 'Offer' THEN 5 ELSE 6 END",
+};
+
+// Get the user's jobs, optionally filtered by a search word and/or a status, and sorted
 // The search matches the company OR the position (job title), ignoring upper/lower case
-const getAllByUser = async (userId, { search, status } = {}) => {
+const getAllByUser = async (
+  userId,
+  { search, status, sortBy = "created_at", order = "desc" } = {}
+) => {
   const conditions = ["user_id = $1"];
   const values = [userId];
 
@@ -20,8 +35,14 @@ const getAllByUser = async (userId, { search, status } = {}) => {
     conditions.push(`(company ILIKE $${values.length} OR job_title ILIKE $${values.length})`);
   }
 
+  const direction = order === "asc" ? "ASC" : "DESC";
+  // NULLS LAST puts jobs without a deadline at the end (either direction)
+  // "id" at the end keeps the order stable when two jobs have the same value
+  const column = SORT_COLUMNS[sortBy] || SORT_COLUMNS.created_at;
+  const orderBy = `${column} ${direction} NULLS LAST, id ${direction}`;
+
   const result = await pool.query(
-    `SELECT * FROM jobs WHERE ${conditions.join(" AND ")} ORDER BY created_at DESC`,
+    `SELECT * FROM jobs WHERE ${conditions.join(" AND ")} ORDER BY ${orderBy}`,
     values
   );
   return result.rows;

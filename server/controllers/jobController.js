@@ -1,6 +1,7 @@
 const Job = require("../models/jobModel");
 
 const STATUSES = ["Saved", "Applied", "OA", "Interview", "Offer", "Rejected"];
+const SORT_FIELDS = ["company", "deadline", "created_at", "status"]; // created_at = date added
 
 const validateJob = (body) => {
   const { company, job_title, status, job_url, deadline } = body;
@@ -44,10 +45,17 @@ const parseListQuery = (query) => {
   const status = typeof query.status === "string" && query.status !== "All" ? query.status : "";
   if (status && !STATUSES.includes(status)) return { error: "Invalid status filter" };
 
-  return { filters: { search, status } };
+  // Sorting: sortBy must be one of these, order must be asc or desc
+  const sortBy = query.sortBy || "created_at";
+  if (!SORT_FIELDS.includes(sortBy)) return { error: "Invalid sortBy" };
+
+  const order = query.order || "desc";
+  if (!["asc", "desc"].includes(order)) return { error: "Invalid order" };
+
+  return { filters: { search, status, sortBy, order } };
 };
 
-// GET /api/jobs?search=shopify&status=Applied
+// GET /api/jobs?search=shopify&status=Applied&sortBy=deadline&order=asc
 const getJobs = async (req, res) => {
   try {
     const { error, filters } = parseListQuery(req.query);
