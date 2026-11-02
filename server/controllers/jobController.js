@@ -89,11 +89,12 @@ const getJobs = async (req, res) => {
   }
 };
 
-// GET /api/jobs/stats -> { total: 12, byStatus: { Saved: 2, Applied: 5, ... } }
+// GET /api/jobs/stats -> { total: 12, byStatus: { Saved: 2, ... }, byMonth: [{ month: "2026-11", count: 3 }, ...] }
 // Always counts every job the user has, no matter what the list is filtered by
 const getJobStats = async (req, res) => {
   try {
     const rows = await Job.getStatusCounts(req.userId);
+    const byMonth = await Job.getMonthlyCounts(req.userId); // last 12 months, oldest first
 
     // Start every status at 0 so the client never gets a missing key
     const byStatus = Object.fromEntries(STATUSES.map((s) => [s, 0]));
@@ -103,7 +104,7 @@ const getJobStats = async (req, res) => {
       total += row.count;
     });
 
-    res.json({ total, byStatus });
+    res.json({ total, byStatus, byMonth });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });

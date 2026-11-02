@@ -67,6 +67,25 @@ const getStatusCounts = async (userId) => {
   return result.rows;
 };
 
+// Count the user's jobs added in each of the last 12 months (for the bar chart)
+// generate_series makes one row per month, so months with no jobs show up as 0 instead of missing
+const getMonthlyCounts = async (userId) => {
+  const result = await pool.query(
+    `SELECT TO_CHAR(m.month, 'YYYY-MM') AS month, COUNT(j.id)::int AS count
+     FROM generate_series(
+            DATE_TRUNC('month', NOW()) - INTERVAL '11 months',
+            DATE_TRUNC('month', NOW()),
+            INTERVAL '1 month'
+          ) AS m(month)
+     LEFT JOIN jobs j
+       ON DATE_TRUNC('month', j.created_at) = m.month AND j.user_id = $1
+     GROUP BY m.month
+     ORDER BY m.month`,
+    [userId]
+  );
+  return result.rows;
+};
+
 const getOne = async (id, userId) => {
   const result = await pool.query(
     "SELECT * FROM jobs WHERE id = $1 AND user_id = $2",
@@ -128,4 +147,4 @@ const remove = async (id, userId) => {
   return result.rows[0];
 };
 
-module.exports = { getAllByUser, getStatusCounts, getOne, create, update, remove };
+module.exports = { getAllByUser, getStatusCounts, getMonthlyCounts, getOne, create, update, remove };

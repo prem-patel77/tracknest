@@ -12,3 +12,13 @@ export const SORT_OPTIONS = [
   { value: "status:asc", label: "Status (Saved to Rejected)" },
   { value: "status:desc", label: "Status (Rejected to Saved)" },
 ];
+
+// Chart colors for each status (match the badge colors in index.css)
+export const STATUS_COLORS = {
+  Saved: "#94a3b8",
+  Applied: "#3b82f6",
+  OA: "#f59e0b",
+  Interview: "#8b5cf6",
+  Offer: "#22c55e",
+  Rejected: "#ef4444",
+};

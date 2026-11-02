@@ -19,6 +19,7 @@ export default function Layout() {
         <nav className="sidebar-nav">
           <NavLink to="/dashboard">Dashboard</NavLink>
           <NavLink to="/jobs/new">Add Job</NavLink>
+          <NavLink to="/statistics">Statistics</NavLink>
           <NavLink to="/profile">Profile</NavLink>
         </nav>
       </aside>

@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import AddJob from "./pages/AddJob";
 import EditJob from "./pages/EditJob";
 import Profile from "./pages/Profile";
+import Statistics from "./pages/Statistics";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 
@@ -19,6 +20,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/jobs/new" element={<AddJob />} />
         <Route path="/jobs/:id/edit" element={<EditJob />} />
+        <Route path="/statistics" element={<Statistics />} />
         <Route path="/profile" element={<Profile />} />
       </Route>
       <Route path="*" element={<h1>404 - Page not found</h1>} />
