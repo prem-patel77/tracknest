@@ -15,11 +15,12 @@ const SORT_COLUMNS = {
     "WHEN 'Interview' THEN 4 WHEN 'Offer' THEN 5 ELSE 6 END",
 };
 
-// Get the user's jobs, optionally filtered by a search word and/or a status, and sorted
+// Get ONE PAGE of the user's jobs, optionally filtered by a search word and/or a status, and sorted
 // The search matches the company OR the position (job title), ignoring upper/lower case
+// Returns { jobs, total } where total = how many jobs match in ALL pages (needed for page buttons)
 const getAllByUser = async (
   userId,
-  { search, status, sortBy = "created_at", order = "desc" } = {}
+  { search, status, sortBy = "created_at", order = "desc", page = 1, limit = 10 } = {}
 ) => {
   const conditions = ["user_id = $1"];
   const values = [userId];
@@ -41,11 +42,20 @@ const getAllByUser = async (
   const column = SORT_COLUMNS[sortBy] || SORT_COLUMNS.created_at;
   const orderBy = `${column} ${direction} NULLS LAST, id ${direction}`;
 
+  const where = conditions.join(" AND ");
+
+  // How many jobs match the search/filter in total (same WHERE, no LIMIT)
+  const countResult = await pool.query(`SELECT COUNT(*)::int AS total FROM jobs WHERE ${where}`, values);
+
+  // Page 1 skips 0 rows, page 2 skips `limit` rows, page 3 skips 2 x `limit` rows, ...
+  const offset = (page - 1) * limit;
   const result = await pool.query(
-    `SELECT * FROM jobs WHERE ${conditions.join(" AND ")} ORDER BY ${orderBy}`,
-    values
+    `SELECT * FROM jobs WHERE ${where} ORDER BY ${orderBy}
+     LIMIT $${values.length + 1} OFFSET $${values.length + 2}`,
+    [...values, limit, offset]
   );
-  return result.rows;
+
+  return { jobs: result.rows, total: countResult.rows[0].total };
 };
 
 // Count ALL of the user's jobs per status (ignores search/filters) for the summary cards

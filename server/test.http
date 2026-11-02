@@ -43,6 +43,15 @@ Authorization: Bearer {{token}}
 GET http://localhost:5000/api/jobs
 Authorization: Bearer {{token}}
 
+### Get jobs: search + status filter + sort + pagination (all optional)
+# sortBy: company | deadline | created_at | status     order: asc | desc
+GET http://localhost:5000/api/jobs?search=shop&status=Applied&sortBy=deadline&order=asc&page=1&limit=5
+Authorization: Bearer {{token}}
+
+### Summary totals for the dashboard cards (ignores search/filters)
+GET http://localhost:5000/api/jobs/stats
+Authorization: Bearer {{token}}
+
 ### Get one job
 GET http://localhost:5000/api/jobs/1
 Authorization: Bearer {{token}}
