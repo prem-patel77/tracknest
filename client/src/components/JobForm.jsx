@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { STATUSES, LIMITS } from "../utils/constants";
+import { getErrorMessage } from "../utils/getErrorMessage";
 
 // Used by both the Add Job and Edit Job pages.
 // - initialValues: starting field values (empty for "add", the saved job for "edit")
@@ -61,7 +62,7 @@ export default function JobForm({ initialValues = EMPTY_JOB, onSubmit, submitLab
         job_url: form.job_url.trim(),
       });
     } catch (err) {
-      setServerError(err.response?.data?.message || "Could not reach the server");
+      setServerError(getErrorMessage(err, "Could not save job"));
       setSubmitting(false);
     }
   };

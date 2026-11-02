@@ -4,6 +4,7 @@ import api from "../api/axios";
 import StatusBadge from "../components/StatusBadge";
 import ConfirmModal from "../components/ConfirmModal";
 import { STATUSES, SORT_OPTIONS } from "../utils/constants";
+import { getErrorMessage } from "../utils/getErrorMessage";
 
 export default function Dashboard() {
   const [jobs, setJobs] = useState([]);
@@ -54,7 +55,7 @@ export default function Dashboard() {
     api
       .get("/jobs/stats")
       .then((res) => setStats(res.data))
-      .catch((err) => setError(err.response?.data?.message || "Could not load totals"));
+      .catch((err) => setError(getErrorMessage(err, "Could not load totals")));
   };
 
   // Load ONE PAGE of jobs from the server whenever the search, filter, sorting or page changes
@@ -71,7 +72,7 @@ export default function Dashboard() {
           setPage(res.data.pagination.totalPages);
         }
       })
-      .catch((err) => setError(err.response?.data?.message || "Could not load jobs"))
+      .catch((err) => setError(getErrorMessage(err, "Could not load jobs")))
       .finally(() => setLoading(false));
   };
 
@@ -87,7 +88,7 @@ export default function Dashboard() {
       loadJobs();
       loadStats();
     } catch (err) {
-      setError(err.response?.data?.message || "Could not delete job");
+      setError(getErrorMessage(err, "Could not delete job"));
     } finally {
       setDeleting(false);
       setJobToDelete(null);

@@ -588,3 +588,10 @@ a.btn {
 .spinner-small { width: 16px; height: 16px; border-width: 2px; border-color: rgba(255,255,255,0.4); border-top-color: #fff; }
 .page-loader { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 64px 16px; color: #64748b; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- Error handling (Phase 23) ---------- */
+.alert-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.alert-info { background: #eff6ff; color: #1d4ed8; border: 1px solid #93c5fd; padding: 10px; border-radius: 6px; }
+.status-card { text-align: center; }
+.status-code { font-size: 4rem; font-weight: 800; color: var(--primary); line-height: 1; }
+.empty-state { text-align: center; padding: 64px 16px; }

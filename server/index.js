@@ -4,6 +4,7 @@ const authRoutes = require("./routes/authRoutes");
 const pool = require("./config/db");
 const express = require("express");
 const cors = require("cors");
+const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 
 const app = express();
 
@@ -15,7 +16,12 @@ const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
   .filter(Boolean);
 
 app.use(cors({ origin: allowedOrigins }));
-app.use(express.json());
+app.use(express.json({ limit: "100kb" })); // notes max 5000 chars, so 100kb is plenty
+// If a request has no JSON body, req.body is undefined; make it {} so controllers can safely read it
+app.use((req, res, next) => {
+  req.body = req.body || {};
+  next();
+});
 app.use("/api/auth", authRoutes);
 app.use("/api/jobs", jobRoutes);
 
@@ -32,6 +38,10 @@ app.get("/api/db-test", async (req, res) => {
     res.status(500).json({ connected: false, error: err.message });
   }
 });
+
+// These two MUST come after all the routes
+app.use(notFound);
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

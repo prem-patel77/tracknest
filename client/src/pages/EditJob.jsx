@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import api from "../api/axios";
 import JobForm from "../components/JobForm";
+import { getErrorMessage } from "../utils/getErrorMessage";
 
 export default function EditJob() {
   const { id } = useParams(); // the :id from the URL /jobs/:id/edit
@@ -29,7 +30,7 @@ export default function EditJob() {
           notes: data.notes || "",
         });
       })
-      .catch((err) => setError(err.response?.data?.message || "Could not load job"))
+      .catch((err) => setError(getErrorMessage(err, "Could not load job")))
       .finally(() => setLoading(false));
   }, [id]);
 

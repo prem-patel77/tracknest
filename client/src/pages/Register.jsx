@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { LIMITS } from "../utils/constants";
+import { getErrorMessage } from "../utils/getErrorMessage";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -47,7 +48,7 @@ export default function Register() {
       navigate("/dashboard");
     } catch (err) {
       // e.g. "Email is already registered"
-      setServerError(err.response?.data?.message || "Could not reach the server");
+      setServerError(getErrorMessage(err, "Could not create account"));
     } finally {
       setSubmitting(false);
     }

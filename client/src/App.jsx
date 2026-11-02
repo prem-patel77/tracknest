@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard";
 import AddJob from "./pages/AddJob";
 import EditJob from "./pages/EditJob";
 import Profile from "./pages/Profile";
+import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 import PageLoader from "./components/PageLoader";
@@ -34,8 +35,9 @@ function App() {
           }
         />
         <Route path="/profile" element={<Profile />} />
+        {/* Any other URL: the 404 page, shown inside the layout so the sidebar stays */}
+        <Route path="*" element={<NotFound />} />
       </Route>
-      <Route path="*" element={<h1>404 - Page not found</h1>} />
     </Routes>
   );
 }
