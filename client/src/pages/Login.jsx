@@ -1,12 +1,16 @@
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import { getErrorMessage } from "../utils/getErrorMessage";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function Login() {
   const { user, loading, login } = useAuth();
   const navigate = useNavigate();
+  // The 401 handler in api/axios.js sends expired sessions here as /login?expired=1
+  const [searchParams] = useSearchParams();
+  const sessionExpired = searchParams.get("expired") === "1";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,7 +44,7 @@ export default function Login() {
       navigate("/dashboard");
     } catch (err) {
       // Show the server's message, or a fallback if the server is unreachable
-      setServerError(err.response?.data?.message || "Could not reach the server");
+      setServerError(getErrorMessage(err, "Could not log in"));
     } finally {
       setSubmitting(false);
     }
@@ -51,7 +55,10 @@ export default function Login() {
       <form className="auth-card" onSubmit={handleSubmit} noValidate>
         <h1>Log in</h1>
 
-        {serverError && <div className="alert-error">{serverError}</div>}
+        {sessionExpired && !serverError && (
+          <div className="alert-info">Your session expired. Please log in again.</div>
+        )}
+        {serverError && <div className="alert-error" role="alert">{serverError}</div>}
 
         <label htmlFor="email">Email</label>
         <input

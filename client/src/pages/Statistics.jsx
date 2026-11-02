@@ -5,6 +5,7 @@ import {
 } from "recharts";
 import api from "../api/axios";
 import { STATUSES, STATUS_COLORS } from "../utils/constants";
+import { getErrorMessage } from "../utils/getErrorMessage";
 
 // "2026-11" -> "Nov 26" (the label under each bar)
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -22,7 +23,7 @@ export default function Statistics() {
     api
       .get("/jobs/stats")
       .then((res) => setStats(res.data))
-      .catch((err) => setError(err.response?.data?.message || "Could not load statistics"));
+      .catch((err) => setError(getErrorMessage(err, "Could not load statistics")));
   }, []);
 
   if (error) return <div className="alert-error">{error}</div>;

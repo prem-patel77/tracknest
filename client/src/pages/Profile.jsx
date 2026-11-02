@@ -2,6 +2,7 @@ import { useState } from "react";
 import api from "../api/axios";
 import { useAuth } from "../context/useAuth";
 import { LIMITS } from "../utils/constants";
+import { getErrorMessage } from "../utils/getErrorMessage";
 
 // Two separate forms: one for name/email, one for the password.
 export default function Profile() {
@@ -36,7 +37,7 @@ export default function Profile() {
       setEmailPassword("");
       setProfileMsg({ type: "success", text: "Profile updated" });
     } catch (err) {
-      setProfileMsg({ type: "error", text: err.response?.data?.message || "Could not update profile" });
+      setProfileMsg({ type: "error", text: getErrorMessage(err, "Could not update profile") });
     } finally {
       setSavingProfile(false);
     }
@@ -72,7 +73,7 @@ export default function Profile() {
       setConfirmPassword("");
       setPasswordMsg({ type: "success", text: "Password updated" });
     } catch (err) {
-      setPasswordMsg({ type: "error", text: err.response?.data?.message || "Could not update password" });
+      setPasswordMsg({ type: "error", text: getErrorMessage(err, "Could not update password") });
     } finally {
       setSavingPassword(false);
     }
