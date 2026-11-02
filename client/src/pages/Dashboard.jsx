@@ -3,12 +3,15 @@ import { Link } from "react-router-dom";
 import api from "../api/axios";
 import StatusBadge from "../components/StatusBadge";
 import ConfirmModal from "../components/ConfirmModal";
+import ErrorAlert from "../components/ErrorAlert";
 import { STATUSES, SORT_OPTIONS } from "../utils/constants";
 import { getErrorMessage } from "../utils/getErrorMessage";
 
 export default function Dashboard() {
   const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // true only until the FIRST page of jobs arrives
+  const [loadedKey, setLoadedKey] = useState(""); // which search/filter/sort/page the shown jobs belong to
+  const [statsLoading, setStatsLoading] = useState(true);
   const [error, setError] = useState("");
   const [jobToDelete, setJobToDelete] = useState(null); // job waiting for confirmation
   const [deleting, setDeleting] = useState(false);
@@ -55,12 +58,14 @@ export default function Dashboard() {
     api
       .get("/jobs/stats")
       .then((res) => setStats(res.data))
-      .catch((err) => setError(getErrorMessage(err, "Could not load totals")));
+      .catch((err) => setError(getErrorMessage(err, "Could not load totals")))
+      .finally(() => setStatsLoading(false));
   };
 
   // Load ONE PAGE of jobs from the server whenever the search, filter, sorting or page changes
   const loadJobs = () => {
     const [sortBy, order] = sort.split(":"); // "deadline:asc" -> "deadline", "asc"
+    const key = [search, status, sort, page, limit].join("|");
     api
       .get("/jobs", { params: { search, status, sortBy, order, page, limit } })
       .then((res) => {
@@ -73,8 +78,14 @@ export default function Dashboard() {
         }
       })
       .catch((err) => setError(getErrorMessage(err, "Could not load jobs")))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        setLoadedKey(key);
+      });
   };
+
+  // While the shown jobs belong to an older search/filter/page, a newer request is still running
+  const fetching = !loading && loadedKey !== [search, status, sort, page, limit].join("|");
 
   useEffect(loadStats, []); // totals: once, when the page opens
   useEffect(loadJobs, [search, status, sort, page, limit]); // jobs: again when any of these change
@@ -113,12 +124,22 @@ export default function Dashboard() {
         <Link to="/jobs/new" className="btn btn-inline">+ Add Job</Link>
       </div>
 
-      {error && <div className="alert-error">{error}</div>}
+      {/* "Try again" reloads both the totals and the list */}
+      <ErrorAlert
+        message={error}
+        onRetry={() => {
+          setError("");
+          loadJobs();
+          loadStats();
+        }}
+      />
 
       <div className="summary-cards">
         {cards.map((card) => (
           <div className="summary-card" key={card.label}>
-            <div className="summary-value">{card.value}</div>
+            <div className="summary-value">
+              {statsLoading ? <span className="skeleton skeleton-value" /> : card.value}
+            </div>
             <div className="summary-label">{card.label}</div>
           </div>
         ))}
@@ -146,15 +167,29 @@ export default function Dashboard() {
       </div>
 
       {loading ? (
-        <p className="center-text">Loading...</p>
-      ) : jobs.length === 0 ? (
+        // First load: grey placeholder rows in the shape of the table
+        <div className="table-wrap" aria-busy="true">
+          <table className="job-table">
+            <tbody>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <tr key={n}>
+                  {[1, 2, 3, 4, 5].map((c) => (
+                    <td key={c}><span className="skeleton skeleton-text" /></td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : jobs.length === 0 && error ? null : jobs.length === 0 ? (
         <p className="center-text">
           {isFiltering
             ? "No jobs match your search or filter."
             : 'No jobs yet. Click "Add Job" to track your first application!'}
         </p>
       ) : (
-        <div className="table-wrap">
+        // While a new page/filter is loading, keep the old rows but fade them out
+        <div className={fetching ? "table-wrap is-fetching" : "table-wrap"}>
           <table className="job-table">
             <thead>
               <tr>
@@ -205,7 +240,7 @@ export default function Dashboard() {
             <button
               className="btn btn-outline btn-small"
               onClick={() => setPage(page - 1)}
-              disabled={page <= 1}
+              disabled={page <= 1 || fetching}
             >
               Previous
             </button>
@@ -213,7 +248,7 @@ export default function Dashboard() {
             <button
               className="btn btn-outline btn-small"
               onClick={() => setPage(page + 1)}
-              disabled={page >= pagination.totalPages}
+              disabled={page >= pagination.totalPages || fetching}
             >
               Next
             </button>
