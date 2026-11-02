@@ -34,13 +34,26 @@ const parseId = (req, res) => {
   return id;
 };
 
-// GET /api/jobs?search=shopify
+// Read and check the query params of GET /api/jobs
+// Returns { error } if something is invalid, otherwise { filters }
+const parseListQuery = (query) => {
+  // Query params are strings from the URL; trim spaces and ignore anything that isn't text
+  const search = typeof query.search === "string" ? query.search.trim() : "";
+
+  // "All" (or nothing) means no status filter
+  const status = typeof query.status === "string" && query.status !== "All" ? query.status : "";
+  if (status && !STATUSES.includes(status)) return { error: "Invalid status filter" };
+
+  return { filters: { search, status } };
+};
+
+// GET /api/jobs?search=shopify&status=Applied
 const getJobs = async (req, res) => {
   try {
-    // Query params are strings from the URL; trim spaces and ignore anything that isn't text
-    const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
+    const { error, filters } = parseListQuery(req.query);
+    if (error) return res.status(400).json({ message: error });
 
-    const jobs = await Job.getAllByUser(req.userId, { search });
+    const jobs = await Job.getAllByUser(req.userId, filters);
     res.json({ jobs });
   } catch (err) {
     console.error(err);

@@ -3,11 +3,16 @@ const pool = require("../config/db");
 // Make user text safe to use inside ILIKE (so "%" and "_" are treated as normal characters)
 const escapeLike = (text) => text.replace(/[\\%_]/g, "\\$&");
 
-// Get the user's jobs, optionally filtered by a search word
+// Get the user's jobs, optionally filtered by a search word and/or a status
 // The search matches the company OR the position (job title), ignoring upper/lower case
-const getAllByUser = async (userId, { search } = {}) => {
+const getAllByUser = async (userId, { search, status } = {}) => {
   const conditions = ["user_id = $1"];
   const values = [userId];
+
+  if (status) {
+    values.push(status);
+    conditions.push(`status = $${values.length}`);
+  }
 
   if (search) {
     values.push(`%${escapeLike(search)}%`);
