@@ -4,6 +4,12 @@ A full-stack job application tracker. Save the jobs you apply to, move them thro
 
 Built as a portfolio project with React, Node/Express and PostgreSQL.
 
+**Live demo:** https://tracknest-flax.vercel.app
+
+Demo login (read-only): `demo@tracknest.dev` / `Demo1234!`
+
+> The API runs on Render's free tier, so the first load after inactivity can take up to a minute to wake up.
+
 ![Dashboard](docs/screenshots/dashboard.png)
 
 ## Features
