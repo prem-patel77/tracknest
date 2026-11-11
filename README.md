@@ -4,9 +4,11 @@ A full-stack job application tracker. Save the jobs you apply to, move them thro
 
 Built as a portfolio project with React, Node/Express and PostgreSQL.
 
-**Live demo:** https://tracknest-flax.vercel.app
+**Live demo (one click, no sign-up):** https://tracknest-flax.vercel.app/demo
 
-Demo login (read-only): `demo@tracknest.dev` / `Demo1234!`
+Or open https://tracknest-flax.vercel.app and press **Try the demo account** on the login page. You can also log in manually with `demo@tracknest.dev` / `Demo1234!`.
+
+The demo account is shared, so its name, email and password are read-only (you can still add, edit and delete jobs). Register your own account to try the profile page.
 
 > The API runs on Render's free tier, so the first load after inactivity can take up to a minute to wake up.
 
@@ -112,6 +114,14 @@ npm run seed
 
 Creates `demo@tracknest.dev` (password `Demo1234!`) with 14 sample jobs spread over the last 6 months so the charts look real. It does nothing if that user already exists and never touches any other user.
 
+Visitors can add, edit and delete jobs on the demo account. To put it back to a clean state:
+
+```powershell
+npm run seed -- --reset
+```
+
+This deletes only the demo user's jobs, creates the 14 sample jobs again with fresh dates, and restores the demo name and password.
+
 ### Useful scripts
 
 | Where | Command | What it does |
@@ -122,6 +132,7 @@ Creates `demo@tracknest.dev` (password `Demo1234!`) with 14 sample jobs spread o
 | server | `npm run dev` | Start the API with auto-restart (nodemon) |
 | server | `npm start` | Start the API |
 | server | `npm run seed` | Create the demo account |
+| server | `npm run seed -- --reset` | Reset the demo account's jobs to the 14 samples |
 
 ## API documentation
 
@@ -140,6 +151,7 @@ Every error is JSON with a `message`:
 | --- | --- |
 | 400 | Invalid input (the message says what is wrong) |
 | 401 | Missing/expired token (`code: "AUTH_REQUIRED"`), wrong password |
+| 403 | The demo account cannot change its profile or password |
 | 404 | Job/user/route not found |
 | 409 | Email already registered |
 | 413 | Request body too large |
@@ -154,6 +166,8 @@ Every error is JSON with a `message`:
 | GET | `/auth/me` | yes | - | `200 { user }` |
 | PUT | `/auth/profile` | yes | `{ name, email, currentPassword }` (password only needed when the email changes) | `200 { user }` |
 | PUT | `/auth/password` | yes | `{ currentPassword, newPassword }` | `200 { message }` |
+
+`PUT /auth/profile` and `PUT /auth/password` return `403` for the shared demo account.
 
 Rules: name up to 100 characters, valid email up to 255 characters, password 8 to 72 characters.
 

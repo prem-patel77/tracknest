@@ -87,6 +87,12 @@ export default function Login() {
           {submitting ? "Logging in..." : "Log in"}
         </button>
 
+        {/* One-click demo for visitors: /demo logs in as the demo user */}
+        <div className="demo-box">
+          <p>Just looking around?</p>
+          <Link to="/demo" className="btn btn-outline">Try the demo account</Link>
+        </div>
+
         <p className="auth-switch">
           No account? <Link to="/register">Register</Link>
         </p>

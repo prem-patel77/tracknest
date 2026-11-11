@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import DemoLogin from "./pages/DemoLogin";
 import Dashboard from "./pages/Dashboard";
 import AddJob from "./pages/AddJob";
 import EditJob from "./pages/EditJob";
@@ -21,6 +22,8 @@ function App() {
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      {/* Logs in as the demo user and opens the dashboard (link for resumes) */}
+      <Route path="/demo" element={<DemoLogin />} />
       {/* Pages below need a logged-in user and share the sidebar/navbar Layout */}
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="/dashboard" element={<Dashboard />} />

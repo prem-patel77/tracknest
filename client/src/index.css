@@ -302,6 +302,18 @@ textarea {
   font-weight: 600;
 }
 
+/* "Try the demo" box under the login form */
+.demo-box {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.demo-box p {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 /* ---------- Logo ---------- */
 .brand {
   display: flex;
