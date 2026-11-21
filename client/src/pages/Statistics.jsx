@@ -11,6 +11,17 @@ import { Link } from "react-router-dom";
 import { STATUSES, STATUS_COLORS } from "../utils/constants";
 import { getErrorMessage } from "../utils/getErrorMessage";
 
+// Chart colors are CSS variables (see index.css), so the charts follow the light / dark theme.
+// Recharts draws plain SVG, so we pass var(--...) strings instead of hex codes.
+const TOOLTIP_STYLE = {
+  background: "var(--surface)",
+  border: "1px solid var(--line)",
+  borderRadius: "6px",
+  color: "var(--ink)",
+};
+const AXIS_TICK = { fill: "var(--ink-muted)", fontSize: 12 };
+const TEXT_STYLE = { color: "var(--ink)" };
+
 // "2026-11" -> "Nov 26" (the label under each bar)
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const formatMonth = (value) => {
@@ -42,11 +53,11 @@ export default function Statistics() {
   // Summary cards. "Active" = still in progress (not rejected, not an offer yet)
   const active = byStatus.Applied + byStatus.OA + byStatus.Interview;
   const cards = [
-    { label: "Total", value: total, accent: "var(--primary)" },
-    { label: "Active", value: active, accent: STATUS_COLORS.Applied },
-    { label: "Interviews", value: byStatus.Interview, accent: STATUS_COLORS.Interview },
-    { label: "Offers", value: byStatus.Offer, accent: STATUS_COLORS.Offer },
-    { label: "Rejected", value: byStatus.Rejected, accent: STATUS_COLORS.Rejected },
+    { label: "Total", value: total },
+    { label: "Active", value: active },
+    { label: "Interviews", value: byStatus.Interview },
+    { label: "Offers", value: byStatus.Offer },
+    { label: "Rejected", value: byStatus.Rejected },
   ];
 
   // Pie chart data: one slice per status that has at least one job
@@ -66,7 +77,7 @@ export default function Statistics() {
 
       <div className="summary-cards">
         {cards.map((card) => (
-          <div className="summary-card" key={card.label} style={{ "--accent": card.accent }}>
+          <div className="summary-card" key={card.label}>
             <div className="summary-label">{card.label}</div>
             <div className="summary-value">{card.value}</div>
           </div>
@@ -83,13 +94,21 @@ export default function Statistics() {
             <h2>Jobs by status</h2>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
-                <Pie data={pieData} dataKey="value" nameKey="name" outerRadius="80%" label>
+                <Pie
+                  data={pieData}
+                  dataKey="value"
+                  nameKey="name"
+                  outerRadius="80%"
+                  stroke="var(--surface)"
+                  label={{ fill: "var(--ink)" }}
+                  animationDuration={400}
+                >
                   {pieData.map((d) => (
                     <Cell key={d.name} fill={STATUS_COLORS[d.name]} />
                   ))}
                 </Pie>
-                <Tooltip />
-                <Legend />
+                <Tooltip contentStyle={TOOLTIP_STYLE} itemStyle={TEXT_STYLE} />
+                <Legend formatter={(name) => <span style={TEXT_STYLE}>{name}</span>} />
               </PieChart>
             </ResponsiveContainer>
           </section>
@@ -98,11 +117,22 @@ export default function Statistics() {
             <h2>Applications per month</h2>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={barData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="month" fontSize={12} interval="preserveStartEnd" />
-                <YAxis allowDecimals={false} width={30} />
-                <Tooltip />
-                <Bar dataKey="count" name="Jobs added" fill="#0d9488" radius={[4, 4, 0, 0]} />
+                <CartesianGrid stroke="var(--line-soft)" vertical={false} />
+                <XAxis dataKey="month" tick={AXIS_TICK} stroke="var(--line)" interval="preserveStartEnd" />
+                <YAxis allowDecimals={false} width={30} tick={AXIS_TICK} stroke="var(--line)" />
+                <Tooltip
+                  contentStyle={TOOLTIP_STYLE}
+                  labelStyle={TEXT_STYLE}
+                  itemStyle={TEXT_STYLE}
+                  cursor={{ fill: "var(--wash)" }}
+                />
+                <Bar
+                  dataKey="count"
+                  name="Jobs added"
+                  fill="var(--teal-main)"
+                  radius={[4, 4, 0, 0]}
+                  animationDuration={400}
+                />
               </BarChart>
             </ResponsiveContainer>
           </section>

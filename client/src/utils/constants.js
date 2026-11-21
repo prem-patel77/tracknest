@@ -13,15 +13,12 @@ export const SORT_OPTIONS = [
   { value: "status:desc", label: "Status (Rejected to Saved)" },
 ];
 
-// Chart colors for each status (match the badge colors in index.css)
-export const STATUS_COLORS = {
-  Saved: "#94a3b8",
-  Applied: "#3b82f6",
-  OA: "#f59e0b",
-  Interview: "#8b5cf6",
-  Offer: "#22c55e",
-  Rejected: "#ef4444",
-};
+// Chart colors for each status. These are CSS variables (defined in index.css), not hex codes,
+// so the charts switch automatically between the light and dark theme.
+// Example: "OA" -> "var(--status-oa)"
+export const STATUS_COLORS = Object.fromEntries(
+  STATUSES.map((status) => [status, `var(--status-${status.toLowerCase()})`])
+);
 
 // Max text lengths (must match server/utils/validators.js and the columns in schema.sql)
 export const LIMITS = {

@@ -32,7 +32,7 @@ export default function Profile() {
         email,
         currentPassword: emailPassword,
       });
-      setUser(res.data.user); // updates "Hi, name" in the navbar too
+      setUser(res.data.user); // updates the name shown in the sidebar too
       setName(res.data.user.name);
       setEmail(res.data.user.email);
       setEmailPassword("");

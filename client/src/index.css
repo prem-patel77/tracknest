@@ -1,30 +1,206 @@
 /* ==========================================================================
-   TrackNest styles
-   Sections: tokens > base > buttons > forms > auth > layout > cards & table
-             > badges > states (loading/empty/errors) > modal > charts > responsive
+   TrackNest styles ("League Table" design, see DESIGN.md)
+   Sections: tokens > base > buttons > forms > alerts > auth > app shell (sidebar)
+             > stat modules > toolbar > job table > pagination > tags & pips
+             > loading/empty states > modal > charts > hover > motion > responsive
+   Rule: colors, fonts and sizes are CSS variables. Everything below the two
+   token blocks uses var(--...) and no raw color values.
+   Themes: the light colors are in :root, the dark colors are in
+   :root[data-theme="dark"]. index.html picks the theme before the page draws
+   and the sun/moon button switches it (see DESIGN.md, "Themes").
    ========================================================================== */
 
-/* ---------- Colors and sizes used everywhere (change them here) ---------- */
+/* ---------- Design tokens (change the look here) ---------- */
 :root {
-  /* Teal brand colors (see design/colors.md) */
-  --primary: #0d9488;
-  --primary-light: #14b8a6;
-  --primary-dark: #0f766e; /* hover color for solid teal buttons */
-  --bg: #f0fdfa; /* light teal tint: hover rows, active sidebar link */
-  --card: #ffffff;
-  --text: #0f172a;
+  /* Brand teal (see design/colors.md) */
+  --teal-main: #0d9488; /* pips, focus, chart bars. Not used behind small white text (3.7:1) */
+  --teal-light: #14b8a6; /* active sidebar link, focus border */
+  --teal-action: #0f766e; /* solid button fill: white text on it is 5.5:1 */
+  --teal-action-hover: #115e59;
+  --on-action: #ffffff;
 
-  --error: #dc2626;
+  /* Sidebar (the deep teal "rail") */
+  --rail: #0f3f3b;
+  --rail-text: #b7e4de;
+  --rail-hover: rgba(255, 255, 255, 0.08);
+  --rail-active-text: #04201e;
+  --rail-strong: #ffffff; /* brightest text on the sidebar */
+
+  /* Surfaces */
+  --page: #f3f7f7; /* page behind the white modules */
+  --surface: #ffffff; /* modules, table, inputs */
+  --wash: #f0fdfa; /* row hover, selected, empty-state tile */
+  --tab-bg: #e6f4f2; /* module header tabs and table header row */
+  --tab-text: #0f5a54;
+
+  /* Text */
+  --ink: #0f172a;
+  --ink-muted: #475569; /* secondary text: 7:1 on white */
+
+  /* Lines (we separate with lines, not shadows) */
+  --line: #d5e3e2;
+  --line-soft: #e5eeed;
+  --field-border: #6b8f8c; /* input outlines need 3:1 against the surface (this is 3.5:1) */
+  --field-border-hover: #4f7a76;
+
+  /* Messages */
+  --soon: #b45309;
+  --overdue: #b91c1c;
+  --error: #b91c1c;
   --error-bg: #fef2f2;
-  --border: #cbd5e1; /* input borders */
+  --error-line: #fecaca;
+  --danger: #b91c1c;
+  --danger-hover: #991b1b;
+  --on-danger: #ffffff; /* text on the red Delete button */
+  --success: #166534;
+  --success-bg: #f0fdf4;
+  --success-line: #bbf7d0;
+  --info: #1d4ed8;
+  --info-bg: #eff6ff;
+  --info-line: #bfdbfe;
 
-  /* Neutrals used by the polished layout */
-  --page-bg: #f6f8fa; /* page background behind the white cards */
-  --line: #e5eaf0; /* thin borders on cards and table rows */
-  --muted: #64748b; /* secondary text */
-  --radius: 12px;
-  --shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.04);
-  --ring: 0 0 0 3px rgba(20, 184, 166, 0.28); /* focus glow */
+  /* Status colors: used by the row stripe, the pips and the charts */
+  --status-saved: #78879b;
+  --status-applied: #3b82f6;
+  --status-oa: #d97706;
+  --status-interview: #8b5cf6;
+  --status-offer: #16a34a;
+  --status-rejected: #ef4444;
+  /* Status tags: a light background with dark text */
+  --tag-saved-bg: #e2e8f0;
+  --tag-saved-text: #334155;
+  --tag-applied-bg: #dbeafe;
+  --tag-applied-text: #1d4ed8;
+  --tag-oa-bg: #fef3c7;
+  --tag-oa-text: #92400e;
+  --tag-interview-bg: #ede9fe;
+  --tag-interview-text: #5b21b6;
+  --tag-offer-bg: #dcfce7;
+  --tag-offer-text: #166534;
+  --tag-rejected-bg: #fee2e2;
+  --tag-rejected-text: #991b1b;
+
+  /* Loading placeholders and the dark overlay behind popups */
+  --skeleton-a: #e2ecec;
+  --skeleton-b: #f1f6f6;
+  --overlay: rgba(15, 23, 42, 0.5);
+  --spinner-track-on-action: rgba(255, 255, 255, 0.4);
+
+  /* Fonts: headings and numbers are condensed, everything else is Barlow */
+  --font-ui: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Barlow Semi Condensed", "Barlow", system-ui, sans-serif;
+
+  /* Sizes: spacing on a 4px scale, small crisp corners */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --radius-sm: 4px; /* tags and pips */
+  --radius: 6px; /* modules, inputs, buttons, table */
+  --radius-lg: 10px; /* popup and login card */
+  --control-height: 42px; /* buttons and inputs are the same height */
+  --rail-width: 232px;
+
+  /* Focus ring and the only shadow in the app (the popup) */
+  --ring: 0 0 0 3px rgba(13, 148, 136, 0.3);
+  --shadow-modal: 0 16px 40px rgba(15, 23, 42, 0.25);
+
+  /* The little arrow on dropdowns. It is a picture, so its color must live here (per theme) */
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+
+  /* Tells the browser this is a light page (scrollbars, date pickers, form controls) */
+  color-scheme: light;
+
+  /* Motion: one curve, three speeds (see "Motion" in DESIGN.md) */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --dur-fast: 120ms;
+  --dur: 180ms;
+}
+
+/* ---------- Dark theme ----------
+   Same variable names as :root above, different values. Only the colors change.
+   Every text color is at least 4.5:1 on its background, and stripes, chart
+   colors and input borders are at least 3:1 (checked, see DESIGN.md "Themes"). */
+:root[data-theme="dark"] {
+  color-scheme: dark; /* scrollbars, date pickers and form controls turn dark too */
+
+  /* Brand teal: lighter steps, because dark surfaces need brighter accents */
+  --teal-main: #2dd4bf; /* pips, chart bars, focus accents (9:1 on the dark surface) */
+  --teal-light: #14b8a6; /* active sidebar link, focus border */
+  --teal-action: #14b8a6; /* solid buttons: dark text on it is 6.9:1 */
+  --teal-action-hover: #2dd4bf;
+  --on-action: #04201e;
+
+  /* Sidebar */
+  --rail: #071a18;
+  --rail-text: #b7e4de;
+  --rail-hover: rgba(255, 255, 255, 0.08);
+  --rail-active-text: #04201e;
+  --rail-strong: #ffffff;
+
+  /* Surfaces */
+  --page: #0b1514;
+  --surface: #111f1e;
+  --wash: #162b29;
+  --tab-bg: #172a28;
+  --tab-text: #7fd8cf;
+
+  /* Text */
+  --ink: #e6f2f1;
+  --ink-muted: #9db8b5;
+
+  /* Lines (inputs need 3:1 against the surface) */
+  --line: #27403e;
+  --line-soft: #1d3331;
+  --field-border: #5f8582;
+  --field-border-hover: #8fb3af;
+
+  /* Messages */
+  --soon: #fbbf24;
+  --overdue: #f87171;
+  --error: #fca5a5;
+  --error-bg: #3a1517;
+  --error-line: #7f1d1d;
+  --danger: #dc2626; /* solid Delete button: white text on it is 4.8:1 */
+  --danger-hover: #b91c1c;
+  --on-danger: #ffffff;
+  --success: #86efac;
+  --success-bg: #14321f;
+  --success-line: #166534;
+  --info: #93c5fd;
+  --info-bg: #14283f;
+  --info-line: #1e40af;
+
+  /* Status colors (stripe, pips and charts) and tags */
+  --status-saved: #94a3b8;
+  --status-applied: #60a5fa;
+  --status-oa: #fbbf24;
+  --status-interview: #a78bfa;
+  --status-offer: #4ade80;
+  --status-rejected: #f87171;
+  --tag-saved-bg: #243342;
+  --tag-saved-text: #cbd5e1;
+  --tag-applied-bg: #1e3a5f;
+  --tag-applied-text: #bfdbfe;
+  --tag-oa-bg: #4a3410;
+  --tag-oa-text: #fde68a;
+  --tag-interview-bg: #34265e;
+  --tag-interview-text: #ddd6fe;
+  --tag-offer-bg: #14401f;
+  --tag-offer-text: #bbf7d0;
+  --tag-rejected-bg: #4a1d1d;
+  --tag-rejected-text: #fecaca;
+
+  --skeleton-a: #1b302e;
+  --skeleton-b: #243d3a;
+  --overlay: rgba(0, 0, 0, 0.65);
+  --spinner-track-on-action: rgba(4, 32, 30, 0.3); /* the spinner inside a solid button is dark here */
+
+  --ring: 0 0 0 3px rgba(45, 212, 191, 0.4);
+  --shadow-modal: 0 16px 40px rgba(0, 0, 0, 0.6);
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239db8b5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
 }
 
 /* ---------- Base ---------- */
@@ -34,31 +210,50 @@
 
 body {
   margin: 0;
-  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  background: var(--page-bg);
-  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  background: var(--page);
+  color: var(--ink);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  accent-color: var(--teal-main);
+  caret-color: var(--teal-main);
+  scrollbar-color: var(--field-border) transparent;
+}
+
+/* The text you highlight with the mouse uses the brand colors too */
+::selection {
+  background: var(--teal-light);
+  color: var(--rail-active-text);
+}
+
+h1,
+h2 {
+  font-family: var(--font-display);
+  text-wrap: balance;
 }
 
 h1 {
   margin: 0;
-  font-size: 1.6rem;
+  font-size: 1.875rem;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  line-height: 1.1;
 }
 
 h2 {
-  font-size: 1.1rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.25;
 }
 
 a {
-  color: var(--primary-dark);
+  color: var(--teal-action);
+  text-underline-offset: 3px;
 }
 
 /* Keyboard users see a clear outline on anything they tab to */
 :focus-visible {
-  outline: 2px solid var(--primary-light);
+  outline: 2px solid var(--teal-light);
   outline-offset: 2px;
 }
 
@@ -66,16 +261,38 @@ a {
   flex-shrink: 0;
 }
 
-.text-muted {
-  color: var(--muted);
+/* Text that only screen readers read (for example the "Actions" column title) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
-/* The white rounded box used for tables, charts and empty states */
+/* "Skip to content" link: invisible until a keyboard user tabs to it */
+.skip-link {
+  position: absolute;
+  left: var(--space-3);
+  top: -60px;
+  z-index: 200;
+  padding: var(--space-2) var(--space-4);
+  background: var(--teal-action);
+  color: var(--on-action);
+  border-radius: var(--radius);
+}
+
+.skip-link:focus {
+  top: var(--space-3);
+}
+
+/* The white box with a thin line used for the table, charts and empty states */
 .card {
-  background: var(--card);
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
 }
 
 /* ---------- Buttons ---------- */
@@ -83,29 +300,26 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--space-2);
   width: 100%;
-  margin-top: 24px;
-  padding: 11px 16px;
-  background: var(--primary);
-  color: white;
-  border: 1px solid var(--primary);
-  border-radius: 8px;
+  min-height: var(--control-height);
+  margin-top: var(--space-5);
+  padding: 9px var(--space-4);
+  background: var(--teal-action);
+  color: var(--on-action);
+  border: 1px solid var(--teal-action);
+  border-radius: var(--radius);
   font: inherit;
   font-weight: 600;
   line-height: 1.2;
   text-decoration: none;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.05s;
-}
-
-.btn:hover:not(:disabled) {
-  background: var(--primary-dark);
-  border-color: var(--primary-dark);
+  transition: background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out), transform 100ms var(--ease-out);
 }
 
 .btn:active:not(:disabled) {
-  transform: translateY(1px);
+  transform: scale(0.97);
 }
 
 .btn:focus-visible {
@@ -118,6 +332,7 @@ a {
   cursor: not-allowed;
 }
 
+/* Fits its text instead of filling the row */
 .btn-inline {
   width: auto;
   margin-top: 0;
@@ -125,31 +340,28 @@ a {
 
 .btn-small {
   width: auto;
-  padding: 7px 12px;
+  min-height: 36px;
+  padding: 6px var(--space-3);
   font-size: 0.9rem;
 }
 
 .btn-outline {
   margin-top: 0;
-  background: var(--card);
-  color: var(--primary-dark);
-  border-color: var(--border);
-}
-
-.btn-outline:hover:not(:disabled) {
-  background: var(--bg);
-  border-color: var(--primary);
-  color: var(--primary-dark);
+  background: var(--surface);
+  color: var(--teal-action);
+  border-color: var(--field-border);
 }
 
 .btn-danger {
-  background: var(--error);
-  border-color: var(--error);
+  background: var(--danger);
+  border-color: var(--danger);
+  color: var(--on-danger);
 }
 
-.btn-danger:hover:not(:disabled) {
-  background: #b91c1c;
-  border-color: #b91c1c;
+/* The spinner inside the red button follows the button's text color */
+.btn-danger .spinner-small {
+  border-color: color-mix(in srgb, var(--on-danger) 40%, transparent);
+  border-top-color: var(--on-danger);
 }
 
 .is-disabled {
@@ -162,31 +374,21 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   padding: 0;
   background: transparent;
-  color: var(--muted);
+  color: var(--ink-muted);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-
-.icon-btn:hover {
-  background: var(--bg);
-  color: var(--primary-dark);
-}
-
-.icon-btn-danger:hover {
-  background: var(--error-bg);
-  color: var(--error);
+  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
 }
 
 /* ---------- Forms ---------- */
 label {
   display: block;
-  margin: 16px 0 6px;
+  margin: var(--space-4) 0 6px;
   font-size: 0.9rem;
   font-weight: 600;
 }
@@ -195,107 +397,124 @@ input,
 select,
 textarea {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font: inherit;
-  background: white;
-  color: var(--text);
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-
-input:hover,
-select:hover,
-textarea:hover {
-  border-color: #94a3b8;
+  min-height: var(--control-height);
+  padding: 9px var(--space-3);
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius);
+  font: inherit; /* 16px, so phones do not zoom in when you tap a field */
+  background: var(--surface);
+  color: var(--ink);
+  transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
 }
 
 input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  border-color: var(--primary-light);
+  border-color: var(--teal-light);
   box-shadow: var(--ring);
+}
+
+/* Our own dropdown arrow (its color is set per theme in --select-arrow) */
+select {
+  appearance: none;
+  padding-right: 36px;
+  background-image: var(--select-arrow);
+  background-repeat: no-repeat;
+  background-position: right 12px center;
 }
 
 textarea {
   resize: vertical;
 }
 
-.field-error {
-  color: var(--error);
-  font-size: 0.85rem;
-  margin: 4px 0 0;
+::placeholder {
+  color: var(--ink-muted);
+  opacity: 0.8;
 }
 
-/* Message boxes */
+.field-error {
+  color: var(--error);
+  font-size: 0.875rem;
+  margin: var(--space-1) 0 0;
+}
+
+/* ---------- Message boxes ---------- */
 .alert-error,
 .alert-success,
 .alert-info {
-  margin: 12px 0;
-  padding: 10px 14px;
-  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-3) 0;
+  padding: 10px var(--space-4);
+  border: 1px solid;
+  border-radius: var(--radius);
   font-size: 0.95rem;
 }
 
 .alert-error {
   background: var(--error-bg);
-  color: #b91c1c;
-  border: 1px solid #fecaca;
+  color: var(--error);
+  border-color: var(--error-line);
 }
 
 .alert-success {
-  background: #f0fdf4;
-  color: #15803d;
-  border: 1px solid #bbf7d0;
+  background: var(--success-bg);
+  color: var(--success);
+  border-color: var(--success-line);
 }
 
 .alert-info {
-  background: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+  background: var(--info-bg);
+  color: var(--info);
+  border-color: var(--info-line);
 }
 
+/* Message on the left, "Try again" button on the right */
 .alert-row {
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.alert-text {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-2);
 }
 
-/* ---------- Auth pages (login / register) ---------- */
+/* ---------- Login and register pages (redesigned in a later step) ---------- */
 .auth-page {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
-  background: radial-gradient(circle at 20% 0%, var(--bg), var(--page-bg) 60%);
+  padding: var(--space-4);
+  background: var(--page);
 }
 
 .auth-card {
-  background: var(--card);
+  background: var(--surface);
   width: 100%;
   max-width: 420px;
   padding: 36px;
   border: 1px solid var(--line);
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  border-radius: var(--radius-lg);
 }
 
 .auth-card .brand {
-  margin-bottom: 24px;
+  margin-bottom: var(--space-5);
 }
 
 .auth-subtitle {
-  margin: 6px 0 8px;
-  color: var(--muted);
+  margin: 6px 0 var(--space-2);
+  color: var(--ink-muted);
 }
 
 .auth-switch {
   text-align: center;
   margin-bottom: 0;
-  color: var(--muted);
+  color: var(--ink-muted);
 }
 
 .auth-switch a {
@@ -309,8 +528,8 @@ textarea {
 }
 
 .demo-box p {
-  margin: 0 0 8px;
-  color: var(--muted);
+  margin: 0 0 var(--space-2);
+  color: var(--ink-muted);
   font-size: 0.9rem;
 }
 
@@ -327,105 +546,87 @@ textarea {
   justify-content: center;
   width: 34px;
   height: 34px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--primary-light), var(--primary-dark));
-  color: white;
+  border-radius: var(--radius);
+  background: var(--teal-main);
+  color: var(--on-action);
 }
 
 .brand-name {
-  font-size: 1.2rem;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  line-height: 1;
 }
 
-/* ---------- App layout (sidebar + navbar) ---------- */
+/* ---------- App shell: deep-teal sidebar on the left, page on the right ---------- */
 .layout {
   display: flex;
   min-height: 100vh;
 }
 
+/* The sidebar stays in view while the page scrolls (so "Log out" is always there) */
 .sidebar {
-  width: 240px;
-  background: var(--card);
-  border-right: 1px solid var(--line);
-  padding: 24px 16px;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  width: var(--rail-width);
+  height: 100vh;
+  padding: var(--space-5) var(--space-3);
+  background: var(--rail);
+  color: var(--rail-text);
   flex-shrink: 0;
 }
 
 .sidebar .brand {
-  padding: 0 8px;
+  padding: 0 var(--space-2);
   margin-bottom: 28px;
+}
+
+.sidebar .brand-name {
+  color: var(--rail-strong);
+}
+
+.sidebar .brand-mark {
+  background: var(--teal-light);
+  color: var(--rail-active-text);
 }
 
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .sidebar-nav a {
-  position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  color: #475569;
+  gap: var(--space-3);
+  min-height: 40px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius);
+  color: var(--rail-text);
   font-weight: 500;
   text-decoration: none;
-  transition: background 0.15s, color 0.15s;
+  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
 }
 
-.sidebar-nav a:hover {
-  background: var(--page-bg);
-  color: var(--text);
-}
-
-/* The page you are on: tinted background, teal text and a bar on the left */
+/* The page you are on: bright teal fill and dark text */
 .sidebar-nav a.active {
-  background: var(--bg);
-  color: var(--primary-dark);
+  background: var(--teal-light);
+  color: var(--rail-active-text);
   font-weight: 600;
 }
 
-.sidebar-nav a.active::before {
-  content: "";
-  position: absolute;
-  left: -16px;
-  top: 8px;
-  bottom: 8px;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: var(--primary);
-}
-
-.main-area {
-  flex: 1;
-  min-width: 0; /* lets the table scroll instead of stretching the page */
-}
-
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  background: var(--card);
-  padding: 12px 32px;
-  border-bottom: 1px solid var(--line);
-}
-
-.navbar-greeting {
-  color: var(--muted);
-}
-
-.navbar-greeting strong {
-  color: var(--text);
-}
-
-.navbar-right {
+/* Who is logged in, pinned to the bottom of the sidebar */
+.sidebar-user {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding: var(--space-3) 0 0;
+  border-top: 1px solid var(--rail-hover);
 }
 
 .avatar {
@@ -434,85 +635,120 @@ textarea {
   justify-content: center;
   width: 34px;
   height: 34px;
+  flex-shrink: 0;
   border-radius: 50%;
-  background: var(--bg);
-  color: var(--primary-dark);
-  border: 1px solid #99f6e4;
+  background: var(--rail-hover);
+  color: var(--rail-strong);
+  font-family: var(--font-display);
   font-weight: 700;
 }
 
+.sidebar-user-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--rail-strong);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The two small icon buttons in the sidebar: theme (sun / moon) and log out */
+.logout-btn,
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  background: transparent;
+  color: var(--rail-text);
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.sidebar a:focus-visible,
+.logout-btn:focus-visible,
+.theme-toggle:focus-visible {
+  outline-color: var(--rail-strong);
+}
+
+.main-area {
+  flex: 1;
+  min-width: 0; /* lets the table shrink instead of stretching the page */
+}
+
 .page {
-  padding: 32px;
-  max-width: 1200px;
+  max-width: 1240px;
+  padding: var(--space-6) clamp(16px, 3vw, 36px);
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
 }
 
 .page-subtitle {
-  margin: 4px 0 0;
-  color: var(--muted);
+  margin: var(--space-1) 0 0;
+  color: var(--ink-muted);
 }
 
-/* ---------- Summary cards ---------- */
+/* ---------- Stat modules (Total, Applied, ...) ---------- */
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
 }
 
 .summary-card {
-  background: var(--card);
-  padding: 16px 20px;
+  overflow: hidden;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
 }
 
-/* --accent is set in the page (inline style) so every card gets its own color */
+/* The small tinted tab on top of each module */
 .summary-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--muted);
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-.summary-label::before {
-  content: "";
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--accent, var(--primary));
+  padding: 5px var(--space-3);
+  background: var(--tab-bg);
+  color: var(--tab-text);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .summary-value {
-  margin-top: 6px;
-  min-height: 38px;
-  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  min-height: 58px;
+  padding: 6px var(--space-3);
+  font-family: var(--font-display);
+  font-size: 2.375rem;
   font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---------- Search / filter bar ---------- */
 .toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 10px;
+  margin-bottom: var(--space-3);
 }
 
 .toolbar select {
   width: auto;
-  background: var(--card);
 }
 
 .search-box {
@@ -523,10 +759,10 @@ textarea {
 
 .search-box .icon {
   position: absolute;
-  left: 12px;
+  left: var(--space-3);
   top: 50%;
   transform: translateY(-50%);
-  color: var(--muted);
+  color: var(--ink-muted);
   pointer-events: none;
 }
 
@@ -536,87 +772,121 @@ textarea {
 
 /* ---------- Job table ---------- */
 .table-wrap {
-  overflow-x: auto;
+  overflow-x: auto; /* safety net: the table scrolls inside its box, never the page */
 }
 
 .job-table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums; /* digits line up in columns */
 }
 
 .job-table th,
 .job-table td {
-  padding: 14px 16px;
+  padding: 10px var(--space-3);
   text-align: left;
-  border-bottom: 1px solid var(--line);
-  white-space: nowrap;
+  border-bottom: 1px solid var(--line-soft);
   vertical-align: middle;
 }
 
+/* Column titles: small, condensed, uppercase on the tinted header row */
 .job-table th {
-  background: #f8fafc;
-  color: var(--muted);
+  background: var(--tab-bg);
+  color: var(--tab-text);
+  border-bottom-color: var(--line);
+  font-family: var(--font-display);
   font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-}
-
-.job-table tbody tr {
-  transition: background 0.12s;
-}
-
-.job-table tbody tr:hover {
-  background: var(--bg);
+  white-space: nowrap;
 }
 
 .job-table tbody tr:last-child td {
   border-bottom: none;
 }
 
-.col-actions {
-  width: 1%; /* shrink to fit the two icon buttons */
-  text-align: right !important;
+/* The colored strip at the start of a row shows the job's status (like a league zone) */
+.job-table .cell-zone {
+  width: 4px; /* the header cell is empty and just as narrow */
+  padding: 0;
 }
 
-.company-cell {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.job-table td.cell-zone {
+  background: var(--zone, var(--line));
 }
 
-.company-avatar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  font-weight: 700;
-  flex-shrink: 0;
+.row-saved { --zone: var(--status-saved); }
+.row-applied { --zone: var(--status-applied); }
+.row-oa { --zone: var(--status-oa); }
+.row-interview { --zone: var(--status-interview); }
+.row-offer { --zone: var(--status-offer); }
+.row-rejected { --zone: var(--status-rejected); }
+
+/* Rank = the row's place in the current sort order */
+.cell-rank {
+  width: 44px;
+  color: var(--ink-muted);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .company-name {
   font-weight: 600;
 }
 
-/* Deadline: date on top, "In 3 days" / "2 days overdue" below it */
-.deadline {
-  display: block;
+/* A rejected application is struck through and quiet */
+.row-rejected .company-name {
+  color: var(--ink-muted);
+  text-decoration: line-through;
 }
 
+/* Small grey line under a value (location, deadline hint) */
 .cell-sub {
   display: block;
-  font-size: 0.8rem;
-  color: var(--muted);
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+}
+
+.deadline {
+  display: block;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Finished jobs (Offer, Rejected) and empty deadlines: the date is quiet */
+.deadline-done {
+  color: var(--ink-muted);
+  font-weight: 400;
+}
+
+/* Hint lines say it in words and carry an icon, so color is never the only signal */
+.deadline-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  white-space: nowrap;
+}
+
+.deadline-later {
+  color: var(--ink-muted);
 }
 
 .deadline-soon {
-  color: #b45309;
+  color: var(--soon);
 }
 
 .deadline-overdue {
-  color: var(--error);
+  color: var(--overdue);
+}
+
+.job-table .col-actions {
+  width: 1%; /* shrink to fit the two icon buttons */
+  white-space: nowrap;
+  text-align: right;
 }
 
 /* ---------- Pagination ---------- */
@@ -624,68 +894,100 @@ textarea {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 16px;
-  margin-top: 16px;
-  color: var(--muted);
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+  color: var(--ink-muted);
   font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .pagination-size {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   margin: 0;
   font-weight: 400;
 }
 
 .pagination-size select {
   width: auto;
-  padding: 5px 8px;
+  min-height: 36px;
+  padding-top: 5px;
+  padding-bottom: 5px;
 }
 
 .pagination-buttons {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   margin-left: auto; /* push the page buttons to the right */
 }
 
-/* ---------- Status badges ---------- */
+/* ---------- Status tags and progress pips ---------- */
 .badge {
   display: inline-block;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 0.78rem;
+  padding: 2px 9px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
   font-weight: 600;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
 }
 
-.badge-saved { background: #e2e8f0; color: #334155; }
-.badge-applied { background: #dbeafe; color: #1d4ed8; }
-.badge-oa { background: #fef3c7; color: #b45309; }
-.badge-interview { background: #ede9fe; color: #6d28d9; }
-.badge-offer { background: #dcfce7; color: #15803d; }
-.badge-rejected { background: #fee2e2; color: #b91c1c; }
+.badge-saved { background: var(--tag-saved-bg); color: var(--tag-saved-text); }
+.badge-applied { background: var(--tag-applied-bg); color: var(--tag-applied-text); }
+.badge-oa { background: var(--tag-oa-bg); color: var(--tag-oa-text); }
+.badge-interview { background: var(--tag-interview-bg); color: var(--tag-interview-text); }
+.badge-offer { background: var(--tag-offer-bg); color: var(--tag-offer-text); }
+.badge-rejected { background: var(--tag-rejected-bg); color: var(--tag-rejected-text); }
+
+/* Five small bars: Saved, Applied, OA, Interview, Offer. The filled ones are the stage reached */
+.stage {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+
+.pip {
+  width: 16px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+.pip-on {
+  background: var(--teal-main);
+}
+
+.stage-offer .pip-on {
+  background: var(--status-offer);
+}
+
+/* Rejected: empty pips with a red outline (we do not know how far the job got) */
+.stage-rejected .pip {
+  background: transparent;
+  border: 1px solid var(--status-rejected);
+}
 
 /* ---------- Job form (add / edit) and profile cards ---------- */
 .form-card {
-  background: var(--card);
+  background: var(--surface);
   max-width: 720px;
-  padding: 8px 32px 32px;
+  padding: var(--space-2) var(--space-6) var(--space-6);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
 }
 
 /* Two fields side by side (they stack on phones, see the responsive section) */
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  column-gap: 16px;
+  column-gap: var(--space-4);
 }
 
 .form-actions {
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   margin-top: 28px;
 }
 
@@ -695,11 +997,11 @@ textarea {
 
 .profile-card {
   margin-top: 0;
-  margin-bottom: 24px;
+  margin-bottom: var(--space-5);
 }
 
 .profile-card h2 {
-  margin: 24px 0 4px;
+  margin: var(--space-5) 0 var(--space-1);
 }
 
 /* ---------- Loading, empty and error states ---------- */
@@ -708,7 +1010,7 @@ textarea {
   width: 32px;
   height: 32px;
   border: 3px solid var(--line);
-  border-top-color: var(--primary);
+  border-top-color: var(--teal-main);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -718,63 +1020,91 @@ textarea {
   width: 16px;
   height: 16px;
   border-width: 2px;
-  border-color: rgba(255, 255, 255, 0.4);
-  border-top-color: #fff;
+  border-color: var(--spinner-track-on-action);
+  border-top-color: var(--on-action);
+}
+
+.btn-outline .spinner-small {
+  border-color: var(--line);
+  border-top-color: var(--teal-main);
 }
 
 .page-loader {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 64px 16px;
-  color: var(--muted);
+  gap: var(--space-3);
+  padding: 64px var(--space-4);
+  color: var(--ink-muted);
 }
 
 .skeleton {
   display: inline-block;
-  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background: linear-gradient(90deg, var(--skeleton-a) 25%, var(--skeleton-b) 50%, var(--skeleton-a) 75%);
   background-size: 200% 100%;
-  animation: shimmer 1.2s infinite;
-  border-radius: 4px;
-}
-
-.skeleton-text {
-  width: 100%;
-  min-width: 80px;
-  height: 14px;
+  animation: shimmer 1.2s linear infinite;
+  border-radius: var(--radius-sm);
 }
 
 .skeleton-value {
   width: 48px;
-  height: 28px;
-  vertical-align: middle;
+  height: 30px;
+}
+
+/* Grey placeholder rows shown while the first page of jobs loads */
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  padding: 15px var(--space-4);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.skeleton-row:last-child {
+  border-bottom: none;
+}
+
+.skeleton-row .skeleton {
+  height: 14px;
+}
+
+.skeleton-row .skeleton:nth-child(1) { width: 24px; }
+.skeleton-row .skeleton:nth-child(2) { width: 22%; }
+.skeleton-row .skeleton:nth-child(3) { width: 30%; }
+.skeleton-row .skeleton:nth-child(4) { width: 12%; }
+
+/* Shown under the placeholders if the free server takes a while to wake up */
+.slow-note {
+  margin: var(--space-3) 0 0;
+  color: var(--ink-muted);
+  font-size: 0.9rem;
 }
 
 .is-fetching {
   opacity: 0.55;
   pointer-events: none;
-  transition: opacity 0.15s;
+  transition: opacity 150ms var(--ease-out);
 }
 
 .center-text {
   text-align: center;
-  padding: 48px 16px;
+  padding: 48px var(--space-4);
 }
 
 .empty-state {
   text-align: center;
-  padding: 56px 24px;
+  padding: 56px var(--space-5);
+  animation: rise 200ms var(--ease-out);
 }
 
 .empty-state h2 {
-  margin: 16px 0 4px;
+  margin: var(--space-4) 0 var(--space-1);
 }
 
 .empty-state p {
-  margin: 0 auto 20px;
+  margin: 0 auto var(--space-4);
   max-width: 380px;
-  color: var(--muted);
+  color: var(--ink-muted);
 }
 
 .empty-state-icon {
@@ -783,25 +1113,27 @@ textarea {
   justify-content: center;
   width: 56px;
   height: 56px;
-  border-radius: 50%;
-  background: var(--bg);
-  color: var(--primary);
+  border-radius: var(--radius);
+  background: var(--wash);
+  border: 1px solid var(--line);
+  color: var(--teal-main);
 }
 
 .status-card {
   text-align: center;
 }
 
+/* Big condensed number on the 404 and error pages */
 .status-code {
+  font-family: var(--font-display);
   font-size: 4rem;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1;
-  color: var(--primary);
-  letter-spacing: -0.04em;
+  color: var(--teal-main);
 }
 
 .status-card p {
-  color: var(--muted);
+  color: var(--ink-muted);
 }
 
 @keyframes spin {
@@ -812,36 +1144,40 @@ textarea {
   to { background-position: -200% 0; }
 }
 
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+}
+
 /* ---------- Confirmation popup ---------- */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.5);
+  background: var(--overlay);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: var(--space-4);
   z-index: 100;
-  animation: fade-in 0.15s ease-out;
+  animation: fade-in 150ms var(--ease-out);
 }
 
 .modal {
-  background: var(--card);
-  padding: 28px 32px;
-  border-radius: 16px;
+  background: var(--surface);
+  padding: 28px var(--space-6);
+  border-radius: var(--radius-lg);
   max-width: 420px;
   width: 100%;
-  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);
-  animation: pop-in 0.18s ease-out;
+  box-shadow: var(--shadow-modal);
+  animation: pop-in var(--dur) var(--ease-out);
 }
 
 .modal h2 {
-  margin: 0 0 8px;
+  margin: 0 0 var(--space-2);
 }
 
 .modal p {
   margin: 0;
-  color: var(--muted);
+  color: var(--ink-muted);
 }
 
 @keyframes fade-in {
@@ -852,71 +1188,108 @@ textarea {
   from { opacity: 0; transform: translateY(8px) scale(0.98); }
 }
 
-/* ---------- Statistics page ---------- */
+/* ---------- Statistics page (redesigned in a later step) ---------- */
 .chart-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .chart-card {
-  padding: 20px;
+  padding: var(--space-5);
   min-width: 0; /* lets the chart shrink on small screens */
 }
 
 .chart-card h2 {
-  margin: 0 0 12px;
+  margin: 0 0 var(--space-3);
 }
 
-/* People who ask their system for less motion get no animations */
+/* ---------- Hover effects (only on devices with a real mouse, so touch screens do not get stuck hovers) ---------- */
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover:not(:disabled) {
+    background: var(--teal-action-hover);
+    border-color: var(--teal-action-hover);
+  }
+
+  .btn-outline:hover:not(:disabled) {
+    background: var(--wash);
+    border-color: var(--teal-main);
+    color: var(--teal-action);
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background: var(--danger-hover);
+    border-color: var(--danger-hover);
+    color: var(--on-danger);
+  }
+
+  .icon-btn:hover {
+    background: var(--wash);
+    color: var(--teal-action);
+  }
+
+  .icon-btn-danger:hover {
+    background: var(--error-bg);
+    color: var(--error);
+  }
+
+  input:hover,
+  select:hover,
+  textarea:hover {
+    border-color: var(--field-border-hover);
+  }
+
+  .sidebar-nav a:hover,
+  .logout-btn:hover,
+  .theme-toggle:hover {
+    background: var(--rail-hover);
+    color: var(--rail-strong);
+  }
+
+  .sidebar-nav a.active:hover {
+    background: var(--teal-light);
+    color: var(--rail-active-text);
+  }
+
+  .job-table tbody tr:hover {
+    background: var(--wash);
+  }
+}
+
+/* ---------- Motion preferences ---------- */
+/* People who ask their system for less motion: no sliding, no shimmer.
+   Quick fades and the loading spinner stay, because they explain what is happening. */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  .skeleton {
+    animation: none;
+  }
+
+  .empty-state,
+  .modal {
+    animation: fade-in 150ms linear;
+  }
+
+  .btn:active:not(:disabled) {
+    transform: none;
   }
 }
 
-/* ---------- Responsive design (keep this block LAST so it overrides the rules above) ---------- */
+/* ---------- Responsive design (keep these blocks LAST so they override the rules above) ---------- */
 
-/* Tablet (up to 1024px): slimmer sidebar and tighter spacing */
-@media (max-width: 1024px) {
-  .sidebar {
-    width: 200px;
-    padding: 20px 12px;
-  }
-
-  .sidebar-nav a.active::before {
-    left: -12px;
-  }
-
-  .navbar,
-  .page {
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-
-  .page {
-    padding-top: 24px;
-  }
-}
-
-/* Phone (up to 768px): the sidebar becomes a top bar, everything stacks vertically */
-@media (max-width: 768px) {
+/* Tablet and phone (up to 960px): the sidebar becomes a bar across the top, table rows stack */
+@media (max-width: 960px) {
   .layout {
     flex-direction: column;
   }
 
   .sidebar {
-    width: 100%;
-    padding: 10px 16px;
-    border-right: none;
-    border-bottom: 1px solid var(--line);
-    display: flex;
+    z-index: 20;
+    flex-direction: row;
     align-items: center;
-    gap: 12px;
+    gap: var(--space-2);
+    width: 100%;
+    height: auto;
+    padding: var(--space-2) var(--space-4);
   }
 
   .sidebar .brand {
@@ -924,70 +1297,145 @@ textarea {
     padding: 0;
   }
 
-  .brand-name {
-    font-size: 1.1rem;
-  }
-
-  /* Links sit in a row; they scroll sideways if they don't fit */
+  /* Links sit in a row, icons only, with 44px touch targets */
   .sidebar-nav {
     flex-direction: row;
-    overflow-x: auto;
-    gap: 2px;
+    margin-left: auto;
   }
 
   .sidebar-nav a {
-    padding: 8px 10px;
-    white-space: nowrap;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
   }
 
-  /* Only icons on a phone, so the four links fit; the active one keeps its tint */
   .sidebar-nav a span {
     display: none;
   }
 
-  .sidebar-nav a.active::before {
+  .sidebar-user {
+    margin-top: 0;
+    padding: 0;
+    border-top: none;
+  }
+
+  .avatar,
+  .sidebar-user-name {
     display: none;
   }
 
-  .navbar {
-    padding: 10px 16px;
+  .logout-btn,
+  .theme-toggle {
+    width: 44px;
+    height: 44px;
   }
 
-  .navbar-greeting {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  /* Each table row becomes a small stacked card:
+     company + buttons, then the position, then status, pips and deadline */
+  .table-wrap {
+    overflow: visible;
   }
 
+  .job-table,
+  .job-table tbody {
+    display: block;
+  }
+
+  .job-table thead {
+    display: none;
+  }
+
+  .job-row {
+    display: grid;
+    grid-template-columns: 4px auto 1fr auto;
+    grid-template-areas:
+      "zone company company actions"
+      "zone position position position"
+      "zone status stage deadline";
+    column-gap: var(--space-3);
+    row-gap: var(--space-1);
+    align-items: center;
+    padding: var(--space-3) var(--space-3) var(--space-3) 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+
+  .job-row:last-child {
+    border-bottom: none;
+  }
+
+  .job-table td {
+    padding: 0;
+    border: none;
+  }
+
+  .job-table td.cell-zone {
+    grid-area: zone;
+    align-self: stretch;
+    border-radius: 0 2px 2px 0;
+  }
+
+  .cell-rank {
+    display: none;
+  }
+
+  .cell-company { grid-area: company; }
+  .cell-position { grid-area: position; }
+  .cell-status { grid-area: status; }
+  .cell-stage { grid-area: stage; }
+  .cell-deadline { grid-area: deadline; text-align: right; }
+  .job-table .col-actions { grid-area: actions; width: auto; }
+
+  .cell-deadline .deadline-hint {
+    justify-content: flex-end;
+  }
+
+  .icon-btn {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* Phone (up to 640px): everything stacks vertically */
+@media (max-width: 640px) {
   .page {
-    padding: 16px;
+    padding: var(--space-4);
   }
 
   h1 {
-    font-size: 1.4rem;
+    font-size: 1.5rem;
   }
 
   .page-header {
     flex-wrap: wrap;
-    margin-bottom: 16px;
+    margin-bottom: var(--space-4);
   }
 
+  .brand-name {
+    display: none;
+  }
+
+  /* Total is wide, the other four sit in a 2 x 2 grid */
   .summary-cards {
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
   }
 
-  .summary-card {
-    padding: 14px 16px;
+  .summary-card:first-child {
+    grid-column: 1 / -1;
   }
 
-  /* Search box and dropdowns each take a full row */
-  .toolbar select {
-    width: 100%;
-  }
-
+  /* Search takes a full row, the two dropdowns share a row, Add job takes a full row */
   .search-box {
     min-width: 0;
+    flex-basis: 100%;
+  }
+
+  .toolbar select {
+    flex: 1;
+    width: 0;
+  }
+
+  .toolbar .btn {
     flex-basis: 100%;
   }
 
@@ -1002,7 +1450,7 @@ textarea {
   }
 
   .form-card {
-    padding: 4px 20px 24px;
+    padding: var(--space-1) 20px 24px;
   }
 
   .form-row {

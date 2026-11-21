@@ -4,7 +4,45 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>client</title>
+    <meta name="theme-color" content="#0f3f3b" />
+    <title>TrackNest</title>
+    <!-- Choose light or dark BEFORE the page is drawn, so there is no flash of the wrong theme.
+         1) the theme the user picked earlier (saved in localStorage), else 2) the system setting.
+         The result goes on <html data-theme="..."> and src/index.css turns it into colors. -->
+    <script>
+      (function () {
+        var theme = "light";
+        try {
+          var saved = localStorage.getItem("theme");
+          if (saved === "light" || saved === "dark") {
+            theme = saved;
+          } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+            theme = "dark";
+          }
+        } catch (e) {
+          // localStorage can be blocked (private mode): use the system setting instead
+          if (window.matchMedia("(prefers-color-scheme: dark)").matches) theme = "dark";
+        }
+        document.documentElement.setAttribute("data-theme", theme);
+      })();
+    </script>
+    <!-- Fonts: Barlow (text) and Barlow Semi Condensed (headings and numbers). display=swap shows text right away. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- media="print" + onload makes the font file download without blocking the first paint;
+         the text shows in a normal font first and swaps to Barlow a moment later -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@600;700&display=swap"
+      rel="stylesheet"
+      media="print"
+      onload="this.media = 'all'"
+    />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@600;700&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
   </head>
   <body>
     <div id="root"></div>

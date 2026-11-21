@@ -2,17 +2,22 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
 import StatusBadge from "../components/StatusBadge";
+import StageProgress from "../components/StageProgress";
 import ConfirmModal from "../components/ConfirmModal";
 import ErrorAlert from "../components/ErrorAlert";
 import EmptyState from "../components/EmptyState";
 import { Icon } from "../components/Icons";
-import { STATUSES, SORT_OPTIONS, STATUS_COLORS } from "../utils/constants";
-import { describeDeadline, avatarColors } from "../utils/format";
+import { STATUSES, SORT_OPTIONS } from "../utils/constants";
+import { describeDeadline } from "../utils/format";
 import { getErrorMessage } from "../utils/getErrorMessage";
+
+// Small icon shown before the deadline hint (so urgency is never shown by color alone)
+const TONE_ICON = { overdue: "alert", soon: "clock" };
 
 export default function Dashboard() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true); // true only until the FIRST page of jobs arrives
+  const [slow, setSlow] = useState(false); // true if that first load takes more than 4 seconds
   const [loadedKey, setLoadedKey] = useState(""); // which search/filter/sort/page the shown jobs belong to
   const [statsLoading, setStatsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -41,6 +46,14 @@ export default function Dashboard() {
     }, 300);
     return () => clearTimeout(timer); // typing again cancels the previous timer
   }, [searchInput]);
+
+  // The free server can take up to a minute to wake up. After 4 seconds of loading,
+  // show a short note so the visitor knows the page is not broken.
+  useEffect(() => {
+    if (!loading) return;
+    const timer = setTimeout(() => setSlow(true), 4000);
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   // Changing a filter, the sorting or the page size also goes back to page 1
   const changeStatus = (value) => {
@@ -109,13 +122,13 @@ export default function Dashboard() {
     }
   };
 
-  // Summary cards; "accent" is the small colored dot next to the label
+  // The five stat modules: a small tab with the name, and the number below it
   const cards = [
-    { label: "Total", value: stats.total, accent: "var(--primary)" },
-    { label: "Applied", value: stats.byStatus.Applied ?? 0, accent: STATUS_COLORS.Applied },
-    { label: "Interview", value: stats.byStatus.Interview ?? 0, accent: STATUS_COLORS.Interview },
-    { label: "Offer", value: stats.byStatus.Offer ?? 0, accent: STATUS_COLORS.Offer },
-    { label: "Rejected", value: stats.byStatus.Rejected ?? 0, accent: STATUS_COLORS.Rejected },
+    { label: "Total", value: stats.total },
+    { label: "Applied", value: stats.byStatus.Applied ?? 0 },
+    { label: "Interview", value: stats.byStatus.Interview ?? 0 },
+    { label: "Offer", value: stats.byStatus.Offer ?? 0 },
+    { label: "Rejected", value: stats.byStatus.Rejected ?? 0 },
   ];
 
   // True when the user is filtering, so we can show a different "empty" message
@@ -133,12 +146,8 @@ export default function Dashboard() {
       <div className="page-header">
         <div>
           <h1>Dashboard</h1>
-          <p className="page-subtitle">Track every application in one place.</p>
+          <p className="page-subtitle">Your pipeline, ranked by what needs you next.</p>
         </div>
-        <Link to="/jobs/new" className="btn btn-inline">
-          <Icon name="plus" size={16} />
-          Add Job
-        </Link>
       </div>
 
       {/* "Try again" reloads both the totals and the list */}
@@ -153,7 +162,7 @@ export default function Dashboard() {
 
       <div className="summary-cards">
         {cards.map((card) => (
-          <div className="summary-card" key={card.label} style={{ "--accent": card.accent }}>
+          <div className="summary-card" key={card.label}>
             <div className="summary-label">{card.label}</div>
             <div className="summary-value">
               {statsLoading ? <span className="skeleton skeleton-value" /> : card.value}
@@ -184,22 +193,29 @@ export default function Dashboard() {
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
         </select>
+        <Link to="/jobs/new" className="btn btn-inline">
+          <Icon name="plus" size={16} />
+          Add job
+        </Link>
       </div>
 
       {loading ? (
         // First load: grey placeholder rows in the shape of the table
-        <div className="table-wrap card" aria-busy="true">
-          <table className="job-table">
-            <tbody>
-              {[1, 2, 3, 4, 5].map((n) => (
-                <tr key={n}>
-                  {[1, 2, 3, 4, 5, 6].map((c) => (
-                    <td key={c}><span className="skeleton skeleton-text" /></td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div aria-busy="true">
+          <div className="table-wrap card">
+            {[1, 2, 3, 4, 5].map((row) => (
+              <div className="skeleton-row" key={row}>
+                {[1, 2, 3, 4].map((bar) => (
+                  <span className="skeleton" key={bar} />
+                ))}
+              </div>
+            ))}
+          </div>
+          {slow && (
+            <p className="slow-note" role="status">
+              Waking the server. Free hosting can take up to a minute on the first visit.
+            </p>
+          )}
         </div>
       ) : jobs.length === 0 && error ? null : jobs.length === 0 ? (
         isFiltering ? (
@@ -224,35 +240,45 @@ export default function Dashboard() {
           <table className="job-table">
             <thead>
               <tr>
+                <th className="cell-zone" aria-hidden="true" />
+                <th className="cell-rank">#</th>
                 <th>Company</th>
                 <th>Position</th>
-                <th>Location</th>
                 <th>Status</th>
+                <th>Progress</th>
                 <th>Deadline</th>
-                <th className="col-actions">Actions</th>
+                <th className="col-actions"><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
             <tbody>
-              {jobs.map((job) => {
+              {jobs.map((job, index) => {
                 const deadline = describeDeadline(job.deadline, job.status);
                 return (
-                  <tr key={job.id}>
-                    <td>
-                      <div className="company-cell">
-                        <span className="company-avatar" style={avatarColors(job.company)}>
-                          {job.company.charAt(0).toUpperCase()}
-                        </span>
-                        <span className="company-name">{job.company}</span>
-                      </div>
+                  // row-<status> colors the strip at the start of the row
+                  <tr key={job.id} className={`job-row row-${job.status.toLowerCase()}`}>
+                    <td className="cell-zone" aria-hidden="true" />
+                    {/* Rank = this row's place in the current sort order (it continues across pages) */}
+                    <td className="cell-rank">{(page - 1) * limit + index + 1}</td>
+                    <td className="cell-company">
+                      <span className="company-name">{job.company}</span>
                     </td>
-                    <td>{job.job_title}</td>
-                    <td className="text-muted">{job.location || "-"}</td>
-                    <td><StatusBadge status={job.status} /></td>
-                    <td>
-                      <span className={deadline.tone ? `deadline deadline-${deadline.tone}` : "deadline"}>
+                    <td className="cell-position">
+                      {job.job_title}
+                      {job.location && <span className="cell-sub">{job.location}</span>}
+                    </td>
+                    <td className="cell-status"><StatusBadge status={job.status} /></td>
+                    <td className="cell-stage"><StageProgress status={job.status} /></td>
+                    <td className="cell-deadline">
+                      <span className={deadline.tone === "done" ? "deadline deadline-done" : "deadline"}>
                         {deadline.label}
                       </span>
-                      {deadline.hint && <span className={`cell-sub deadline-${deadline.tone}`}>{deadline.hint}</span>}
+                      {/* The hint is in words and has an icon, so urgency never depends on color alone */}
+                      {deadline.hint && (
+                        <span className={`cell-sub deadline-hint deadline-${deadline.tone}`}>
+                          {TONE_ICON[deadline.tone] && <Icon name={TONE_ICON[deadline.tone]} size={14} />}
+                          {deadline.hint}
+                        </span>
+                      )}
                     </td>
                     <td className="col-actions">
                       <Link

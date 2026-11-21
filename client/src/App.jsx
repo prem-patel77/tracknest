@@ -24,7 +24,7 @@ function App() {
       <Route path="/register" element={<Register />} />
       {/* Logs in as the demo user and opens the dashboard (link for resumes) */}
       <Route path="/demo" element={<DemoLogin />} />
-      {/* Pages below need a logged-in user and share the sidebar/navbar Layout */}
+      {/* Pages below need a logged-in user and share the sidebar Layout */}
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/jobs/new" element={<AddJob />} />
