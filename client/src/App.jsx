@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
+import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import DemoLogin from "./pages/DemoLogin";
@@ -19,7 +20,8 @@ const Statistics = lazy(() => import("./pages/Statistics"));
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      {/* Public landing page (logged-in users are sent on to the dashboard) */}
+      <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       {/* Logs in as the demo user and opens the dashboard (link for resumes) */}

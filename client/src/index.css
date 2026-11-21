@@ -2,7 +2,7 @@
    TrackNest styles ("League Table" design, see DESIGN.md)
    Sections: tokens > base > buttons > forms > alerts > auth > app shell (sidebar)
              > stat modules > toolbar > job table > pagination > tags & pips
-             > loading/empty states > modal > charts > hover > motion > responsive
+             > loading/empty states > modal > charts > landing & demo > hover > motion > responsive
    Rule: colors, fonts and sizes are CSS variables. Everything below the two
    token blocks uses var(--...) and no raw color values.
    Themes: the light colors are in :root, the dark colors are in
@@ -473,6 +473,7 @@ textarea {
 
 /* Message on the left, "Try again" button on the right */
 .alert-row {
+  flex-wrap: wrap; /* on narrow screens the button drops below the message */
   justify-content: space-between;
   gap: var(--space-3);
 }
@@ -584,11 +585,13 @@ textarea {
   margin-bottom: 28px;
 }
 
-.sidebar .brand-name {
+.sidebar .brand-name,
+.landing-nav .brand-name {
   color: var(--rail-strong);
 }
 
-.sidebar .brand-mark {
+.sidebar .brand-mark,
+.landing-nav .brand-mark {
   background: var(--teal-light);
   color: var(--rail-active-text);
 }
@@ -671,6 +674,7 @@ textarea {
 }
 
 .sidebar a:focus-visible,
+.landing-nav a:focus-visible,
 .logout-btn:focus-visible,
 .theme-toggle:focus-visible {
   outline-color: var(--rail-strong);
@@ -1204,6 +1208,275 @@ textarea {
   margin: 0 0 var(--space-3);
 }
 
+/* ---------- Landing page (the public page at "/") and the /demo screen ---------- */
+
+/* Top bar: the same deep teal as the sidebar */
+.landing-nav {
+  background: var(--rail);
+  color: var(--rail-text);
+}
+
+.landing-nav-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: var(--space-2) clamp(16px, 3vw, 36px);
+}
+
+/* The name stays visible here, even on phones (the app's own top bar hides it) */
+.landing-nav .brand-name {
+  display: inline;
+}
+
+.landing-nav-links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-left: auto;
+}
+
+.landing-nav-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius);
+  color: var(--rail-text);
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.landing-nav .theme-toggle {
+  width: 44px;
+  height: 44px;
+}
+
+.landing {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 3vw, 36px) var(--space-6);
+}
+
+/* Phones: text on top, preview below. From 900px: side by side. */
+.landing-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6);
+  padding: var(--space-6) 0;
+}
+
+/* The small tinted tab, used here as a label above the headline */
+.landing-tab {
+  display: inline-block;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.landing-copy h1 {
+  margin: var(--space-4) 0 var(--space-3);
+}
+
+/* Every paragraph on the landing page: muted, and a comfortable line length */
+.landing-lead,
+.landing-note,
+.landing-module-body p,
+.landing-cta p {
+  max-width: 52ch;
+  margin: 0;
+  color: var(--ink-muted);
+}
+
+.landing-note {
+  margin-top: var(--space-4);
+  font-size: 0.9375rem;
+}
+
+.landing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+/* Preview of the dashboard: the box clips the tab and the rows to its rounded corners */
+.landing-preview {
+  overflow: hidden;
+}
+
+/* Two lines per row: stripe, rank, company + position, tag / then pips and deadline */
+.preview-row {
+  display: grid;
+  grid-template-columns: 4px 28px minmax(0, 1fr) auto;
+  grid-template-areas:
+    "zone rank main status"
+    "zone . meta meta";
+  column-gap: var(--space-3);
+  row-gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-3) var(--space-3) var(--space-3) 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.preview-zone {
+  grid-area: zone;
+  align-self: stretch;
+  background: var(--zone, var(--line));
+  border-radius: 0 2px 2px 0;
+}
+
+.preview-rank {
+  grid-area: rank;
+  color: var(--ink-muted);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.preview-main {
+  grid-area: main;
+  min-width: 0;
+}
+
+.preview-status {
+  grid-area: status;
+}
+
+.preview-meta {
+  grid-area: meta;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.preview-note {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--line);
+  color: var(--ink-muted);
+  font-size: 0.8125rem;
+}
+
+/* Grey blocks that stand in for the headline and the preview while loading */
+.landing-skeleton-text .skeleton {
+  display: block;
+  height: 32px;
+  margin-bottom: var(--space-3);
+}
+
+.landing-skeleton-text .skeleton:nth-child(1) { width: 85%; }
+.landing-skeleton-text .skeleton:nth-child(2) { width: 60%; }
+.landing-skeleton-text .skeleton:nth-child(3) { width: 90%; height: 16px; }
+
+/* The two "what makes it different" modules, then the final call to action */
+.landing-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.landing-module {
+  overflow: hidden;
+}
+
+.landing-module-body {
+  padding: var(--space-4) var(--space-4) var(--space-5);
+}
+
+.landing-module-body h2 {
+  margin: 0 0 var(--space-1);
+}
+
+.landing-module-body p {
+  margin-bottom: var(--space-4);
+}
+
+.preview-list,
+.landing-stages,
+.landing-deadlines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Tag on the left, its pips on the right, so the pips line up in a column */
+.landing-stages li {
+  display: grid;
+  grid-template-columns: 96px auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-1) 0;
+}
+
+.landing-deadlines {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.landing-deadlines .deadline-hint {
+  font-weight: 600;
+}
+
+.landing-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4) var(--space-5);
+  padding: var(--space-5);
+}
+
+.landing-cta h2 {
+  margin: 0 0 var(--space-1);
+}
+
+.landing-cta p {
+  max-width: 52ch;
+  margin: 0;
+  color: var(--ink-muted);
+}
+
+.landing-cta .landing-actions {
+  margin-top: 0;
+}
+
+.landing-footer {
+  padding-top: var(--space-5);
+  color: var(--ink-muted);
+  font-size: 0.9375rem;
+}
+
+/* /demo screen: grey rows while signing in, and the links under the error */
+.demo-skeleton {
+  margin-top: var(--space-5);
+  overflow: hidden;
+}
+
+.demo-links {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-5);
+  margin: var(--space-3) 0 0;
+}
+
+.demo-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 600;
+}
+
+@media (min-width: 900px) {
+  .landing-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    padding: calc(var(--space-6) * 2) 0;
+  }
+}
+
 /* ---------- Hover effects (only on devices with a real mouse, so touch screens do not get stuck hovers) ---------- */
 @media (hover: hover) and (pointer: fine) {
   .btn:hover:not(:disabled) {
@@ -1240,6 +1513,7 @@ textarea {
   }
 
   .sidebar-nav a:hover,
+  .landing-nav-link:hover,
   .logout-btn:hover,
   .theme-toggle:hover {
     background: var(--rail-hover);
@@ -1447,6 +1721,16 @@ textarea {
 
   .auth-card {
     padding: 28px 20px;
+  }
+
+  /* Landing page: the two buttons each take a full row, with 44px touch targets */
+  .landing-actions .btn {
+    flex: 1 1 100%;
+    min-height: 44px;
+  }
+
+  .landing-cta {
+    padding: var(--space-4);
   }
 
   .form-card {

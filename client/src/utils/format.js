@@ -7,6 +7,9 @@ export function formatDate(value) {
   return `${MONTHS[month - 1]} ${day}, ${year}`;
 }
 
+// Icon (see components/Icons.jsx) shown before a deadline hint, so urgency is never shown by color alone
+export const DEADLINE_ICON = { overdue: "alert", soon: "clock" };
+
 // Describes a job's deadline: { label, hint, tone }
 // tone: "overdue" (red), "soon" (amber, within 7 days), "later" (more than 7 days away)
 // or "done" (no deadline, or a finished job: Offer / Rejected never count as overdue).

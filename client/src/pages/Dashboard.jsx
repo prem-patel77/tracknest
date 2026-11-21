@@ -6,18 +6,16 @@ import StageProgress from "../components/StageProgress";
 import ConfirmModal from "../components/ConfirmModal";
 import ErrorAlert from "../components/ErrorAlert";
 import EmptyState from "../components/EmptyState";
+import SkeletonRows from "../components/SkeletonRows";
+import SlowNote from "../components/SlowNote";
 import { Icon } from "../components/Icons";
 import { STATUSES, SORT_OPTIONS } from "../utils/constants";
-import { describeDeadline } from "../utils/format";
+import { describeDeadline, DEADLINE_ICON } from "../utils/format";
 import { getErrorMessage } from "../utils/getErrorMessage";
-
-// Small icon shown before the deadline hint (so urgency is never shown by color alone)
-const TONE_ICON = { overdue: "alert", soon: "clock" };
 
 export default function Dashboard() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true); // true only until the FIRST page of jobs arrives
-  const [slow, setSlow] = useState(false); // true if that first load takes more than 4 seconds
   const [loadedKey, setLoadedKey] = useState(""); // which search/filter/sort/page the shown jobs belong to
   const [statsLoading, setStatsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -46,14 +44,6 @@ export default function Dashboard() {
     }, 300);
     return () => clearTimeout(timer); // typing again cancels the previous timer
   }, [searchInput]);
-
-  // The free server can take up to a minute to wake up. After 4 seconds of loading,
-  // show a short note so the visitor knows the page is not broken.
-  useEffect(() => {
-    if (!loading) return;
-    const timer = setTimeout(() => setSlow(true), 4000);
-    return () => clearTimeout(timer);
-  }, [loading]);
 
   // Changing a filter, the sorting or the page size also goes back to page 1
   const changeStatus = (value) => {
@@ -203,19 +193,9 @@ export default function Dashboard() {
         // First load: grey placeholder rows in the shape of the table
         <div aria-busy="true">
           <div className="table-wrap card">
-            {[1, 2, 3, 4, 5].map((row) => (
-              <div className="skeleton-row" key={row}>
-                {[1, 2, 3, 4].map((bar) => (
-                  <span className="skeleton" key={bar} />
-                ))}
-              </div>
-            ))}
+            <SkeletonRows rows={5} />
           </div>
-          {slow && (
-            <p className="slow-note" role="status">
-              Waking the server. Free hosting can take up to a minute on the first visit.
-            </p>
-          )}
+          <SlowNote />
         </div>
       ) : jobs.length === 0 && error ? null : jobs.length === 0 ? (
         isFiltering ? (
@@ -275,7 +255,7 @@ export default function Dashboard() {
                       {/* The hint is in words and has an icon, so urgency never depends on color alone */}
                       {deadline.hint && (
                         <span className={`cell-sub deadline-hint deadline-${deadline.tone}`}>
-                          {TONE_ICON[deadline.tone] && <Icon name={TONE_ICON[deadline.tone]} size={14} />}
+                          {DEADLINE_ICON[deadline.tone] && <Icon name={DEADLINE_ICON[deadline.tone]} size={14} />}
                           {deadline.hint}
                         </span>
                       )}
