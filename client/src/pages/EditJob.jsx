@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import api from "../api/axios";
 import JobForm from "../components/JobForm";
-import PageLoader from "../components/PageLoader";
+import FormSkeleton from "../components/FormSkeleton";
+import SlowNote from "../components/SlowNote";
 import ErrorAlert from "../components/ErrorAlert";
 import { getErrorMessage } from "../utils/getErrorMessage";
 
@@ -15,7 +16,7 @@ export default function EditJob() {
   const [error, setError] = useState("");
 
   // Load the job so the form can be pre-filled
-  useEffect(() => {
+  const loadJob = () => {
     api
       .get(`/jobs/${id}`)
       .then((res) => {
@@ -34,22 +35,42 @@ export default function EditJob() {
       })
       .catch((err) => setError(getErrorMessage(err, "Could not load job")))
       .finally(() => setLoading(false));
-  }, [id]);
+  };
+  useEffect(loadJob, [id]);
+
+  // "Try again": show the loading state again, then repeat the request
+  const retry = () => {
+    setError("");
+    setLoading(true);
+    loadJob();
+  };
 
   const handleSubmit = async (data) => {
     await api.put(`/jobs/${id}`, data);
     navigate("/dashboard");
   };
 
-  if (loading) return <PageLoader text="Loading job..." />;
-
-  if (error) {
-    return (
-      <div>
-        <ErrorAlert message={error} />
-        <p><Link to="/dashboard">Back to dashboard</Link></p>
-      </div>
+  // Pick what to show under the title: loading, error, or the form
+  let body;
+  if (loading) {
+    // Loading: grey placeholders in the shape of the form
+    body = (
+      <>
+        <FormSkeleton />
+        <SlowNote />
+      </>
     );
+  } else if (error) {
+    // Error: say what went wrong, and offer a retry or a way out
+    body = (
+      <>
+        <ErrorAlert message={error} onRetry={retry} />
+        <Link to="/dashboard" className="btn btn-inline btn-outline">Back to dashboard</Link>
+      </>
+    );
+  } else {
+    // Only rendered after the job has loaded, so the form starts with the saved values
+    body = <JobForm initialValues={job} onSubmit={handleSubmit} submitLabel="Save Changes" />;
   }
 
   return (
@@ -60,8 +81,7 @@ export default function EditJob() {
           <p className="page-subtitle">Update the details or move it to the next stage.</p>
         </div>
       </div>
-      {/* Only rendered after the job has loaded, so the form starts with the saved values */}
-      <JobForm initialValues={job} onSubmit={handleSubmit} submitLabel="Save Changes" />
+      {body}
     </div>
   );
 }

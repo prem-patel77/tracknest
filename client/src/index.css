@@ -388,9 +388,25 @@ a {
 /* ---------- Forms ---------- */
 label {
   display: block;
-  margin: var(--space-4) 0 6px;
-  font-size: 0.9rem;
+  margin: 0 0 6px;
+  font-size: 0.875rem;
   font-weight: 600;
+}
+
+/* One label + input + hint + error (see components/Field.jsx) */
+.field {
+  margin-top: var(--space-4);
+}
+
+.field-required {
+  color: var(--ink-muted);
+  font-weight: 400;
+}
+
+.field-hint {
+  margin: 6px 0 0;
+  color: var(--ink-muted);
+  font-size: 0.875rem;
 }
 
 input,
@@ -433,10 +449,23 @@ textarea {
   opacity: 0.8;
 }
 
+/* Error text sits under the field, with an icon, and the field gets a red border */
 .field-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 6px 0 0;
   color: var(--error);
   font-size: 0.875rem;
-  margin: var(--space-1) 0 0;
+}
+
+.field-error .icon {
+  margin-top: 2px;
+}
+
+/* Red border, except while the field is focused (then the teal focus border and ring show) */
+.field-invalid :is(input, select, textarea):not(:focus) {
+  border-color: var(--overdue);
 }
 
 /* ---------- Message boxes ---------- */
@@ -480,18 +509,47 @@ textarea {
 
 .alert-text {
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* the icon stays beside the first line if the message wraps */
   gap: var(--space-2);
 }
 
-/* ---------- Login and register pages (redesigned in a later step) ---------- */
+.alert-text .icon {
+  margin-top: 2px;
+}
+
+/* ---------- Login, register, demo and crash screens ----------
+   Phones: a teal strip (logo + one line) above the form.
+   900px and up: the strip becomes a deep-teal panel beside the form. */
 .auth-page {
-  min-height: 100vh;
   display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--page);
+}
+
+.auth-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--rail);
+  color: var(--rail-text);
+}
+
+.auth-promise {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.auth-main {
+  display: flex;
+  flex: 1;
   align-items: center;
   justify-content: center;
-  padding: var(--space-4);
-  background: var(--page);
+  padding: var(--space-5) var(--space-4);
 }
 
 .auth-card {
@@ -503,35 +561,33 @@ textarea {
   border-radius: var(--radius-lg);
 }
 
-.auth-card .brand {
-  margin-bottom: var(--space-5);
-}
-
 .auth-subtitle {
   margin: 6px 0 var(--space-2);
   color: var(--ink-muted);
 }
 
-.auth-switch {
+/* "Try the demo account" sits right under the Log in button */
+.demo-btn {
+  margin-top: var(--space-3);
+}
+
+.auth-hint {
+  margin: var(--space-2) 0 0;
+  color: var(--ink-muted);
+  font-size: 0.875rem;
   text-align: center;
-  margin-bottom: 0;
+}
+
+.auth-switch {
+  margin: var(--space-5) 0 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line-soft);
+  text-align: center;
   color: var(--ink-muted);
 }
 
 .auth-switch a {
   font-weight: 600;
-}
-
-/* "Try the demo" box under the login form */
-.demo-box {
-  margin: 20px 0;
-  text-align: center;
-}
-
-.demo-box p {
-  margin: 0 0 var(--space-2);
-  color: var(--ink-muted);
-  font-size: 0.9rem;
 }
 
 /* ---------- Logo ---------- */
@@ -585,13 +641,16 @@ textarea {
   margin-bottom: 28px;
 }
 
+/* The logo on every deep-teal surface: the sidebar, the landing bar and the auth panel */
 .sidebar .brand-name,
-.landing-nav .brand-name {
+.landing-nav .brand-name,
+.auth-panel .brand-name {
   color: var(--rail-strong);
 }
 
 .sidebar .brand-mark,
-.landing-nav .brand-mark {
+.landing-nav .brand-mark,
+.auth-panel .brand-mark {
   background: var(--teal-light);
   color: var(--rail-active-text);
 }
@@ -711,15 +770,24 @@ textarea {
   margin-bottom: var(--space-5);
 }
 
-.summary-card {
+/* A module = a white box with a hairline border and a small tinted tab on top.
+   Stat numbers, form sections and charts all use it. */
+.summary-card,
+.module {
   overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
 }
 
+.module-body {
+  padding: 0 var(--space-5) var(--space-5);
+}
+
 /* The small tinted tab on top of each module */
-.summary-label {
+.summary-label,
+.module-tab {
+  margin: 0; /* the tab can be an <h2>, which has default margins */
   padding: 5px var(--space-3);
   background: var(--tab-bg);
   color: var(--tab-text);
@@ -973,13 +1041,13 @@ textarea {
   border: 1px solid var(--status-rejected);
 }
 
-/* ---------- Job form (add / edit) and profile cards ---------- */
-.form-card {
-  background: var(--surface);
+/* ---------- Forms (add / edit job, profile): modules stacked 12px apart ---------- */
+.form-stack {
   max-width: 720px;
-  padding: var(--space-2) var(--space-6) var(--space-6);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+}
+
+.form-stack .module + .module {
+  margin-top: var(--space-3);
 }
 
 /* Two fields side by side (they stack on phones, see the responsive section) */
@@ -997,15 +1065,6 @@ textarea {
 
 .form-actions .btn {
   margin-top: 0;
-}
-
-.profile-card {
-  margin-top: 0;
-  margin-bottom: var(--space-5);
-}
-
-.profile-card h2 {
-  margin: var(--space-5) 0 var(--space-1);
 }
 
 /* ---------- Loading, empty and error states ---------- */
@@ -1053,6 +1112,25 @@ textarea {
 .skeleton-value {
   width: 48px;
   height: 30px;
+}
+
+/* Placeholders for a module tab, a field label and an input (the loading form) */
+.skeleton-tab {
+  width: 72px;
+  height: 12px;
+  vertical-align: middle;
+}
+
+.skeleton-label {
+  display: block;
+  width: 88px;
+  height: 14px;
+  margin-bottom: 6px;
+}
+
+.skeleton-input {
+  display: block;
+  height: var(--control-height);
 }
 
 /* Grey placeholder rows shown while the first page of jobs loads */
@@ -1192,20 +1270,107 @@ textarea {
   from { opacity: 0; transform: translateY(8px) scale(0.98); }
 }
 
-/* ---------- Statistics page (redesigned in a later step) ---------- */
+/* ---------- Statistics page: each chart is a module with a tab ---------- */
 .chart-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
 
-.chart-card {
-  padding: var(--space-5);
-  min-width: 0; /* lets the chart shrink on small screens */
+.chart-grid .module {
+  min-width: 0; /* without this, a chart stops its grid cell from shrinking on small screens */
 }
 
-.chart-card h2 {
-  margin: 0 0 var(--space-3);
+.chart-body {
+  padding-top: var(--space-4);
+}
+
+.skeleton-chart {
+  display: block;
+  width: 100%;
+  height: 260px;
+}
+
+.chart-note {
+  margin: 0;
+  padding: var(--space-5) 0;
+  color: var(--ink-muted);
+}
+
+/* Hover box over a slice or bar: a surface with a hairline border, no shadow */
+.chart-tooltip {
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-tooltip-label {
+  display: block;
+  color: var(--ink-muted);
+  font-size: 0.875rem;
+}
+
+/* Small colour square before a status name (legend, table and tooltip) */
+.legend-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: var(--space-2);
+  border-radius: var(--radius-sm);
+  vertical-align: -1px;
+}
+
+/* The numbers behind a chart: the status legend and the "View as table" lists */
+.chart-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-table th,
+.chart-table td {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: left;
+}
+
+.chart-table th {
+  color: var(--ink-muted);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.chart-table th:not(:first-child),
+.chart-table td:not(:first-child) {
+  text-align: right;
+}
+
+.status-legend {
+  margin-top: var(--space-4);
+}
+
+.chart-details {
+  margin-top: var(--space-3);
+}
+
+.chart-details summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--teal-action);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chart-details .chart-table {
+  margin-bottom: var(--space-2);
 }
 
 /* ---------- Landing page (the public page at "/") and the /demo screen ---------- */
@@ -1223,11 +1388,6 @@ textarea {
   max-width: 1240px;
   margin: 0 auto;
   padding: var(--space-2) clamp(16px, 3vw, 36px);
-}
-
-/* The name stays visible here, even on phones (the app's own top bar hides it) */
-.landing-nav .brand-name {
-  display: inline;
 }
 
 .landing-nav-links {
@@ -1475,6 +1635,30 @@ textarea {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
     padding: calc(var(--space-6) * 2) 0;
   }
+
+  /* Auth screens: the strip becomes a full-height panel on the left */
+  .auth-page {
+    flex-direction: row;
+  }
+
+  .auth-panel {
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    flex: 0 0 440px;
+    height: 100vh;
+    padding: 48px 40px;
+  }
+
+  .auth-promise {
+    margin: auto 0; /* centred between the logo and the bottom of the panel */
+    max-width: 14ch;
+    color: var(--rail-strong);
+    font-size: 2.375rem;
+    font-weight: 700;
+    line-height: 1.1;
+    text-wrap: balance;
+  }
 }
 
 /* ---------- Hover effects (only on devices with a real mouse, so touch screens do not get stuck hovers) ---------- */
@@ -1685,7 +1869,8 @@ textarea {
     margin-bottom: var(--space-4);
   }
 
-  .brand-name {
+  /* Only the app's top bar hides the name (icons only); the landing bar and auth panel keep it */
+  .sidebar .brand-name {
     display: none;
   }
 
@@ -1733,12 +1918,18 @@ textarea {
     padding: var(--space-4);
   }
 
-  .form-card {
-    padding: var(--space-1) 20px 24px;
+  .module-body {
+    padding: 0 var(--space-4) var(--space-4);
   }
 
   .form-row {
     grid-template-columns: 1fr;
+  }
+
+  /* Save and Cancel share the row, with 44px touch targets */
+  .form-actions .btn {
+    flex: 1;
+    min-height: 44px;
   }
 
   .chart-grid {

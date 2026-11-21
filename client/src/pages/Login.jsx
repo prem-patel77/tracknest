@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import AuthLayout from "../components/AuthLayout";
+import Field from "../components/Field";
+import ErrorAlert from "../components/ErrorAlert";
+import Notice from "../components/Notice";
 import Spinner from "../components/Spinner";
-import Brand from "../components/Brand";
+import { LIMITS } from "../utils/constants";
+import { clearOnChange, focusFirstError, validateEmail } from "../utils/forms";
 import { getErrorMessage } from "../utils/getErrorMessage";
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function Login() {
   const { user, loading, login } = useAuth();
@@ -26,9 +29,9 @@ export default function Login() {
   // Check the inputs before calling the API
   const validate = () => {
     const newErrors = {};
-    if (!email.trim()) newErrors.email = "Email is required";
-    else if (!EMAIL_REGEX.test(email.trim())) newErrors.email = "Please enter a valid email";
-    if (!password) newErrors.password = "Password is required";
+    const emailError = validateEmail(email);
+    if (emailError) newErrors.email = emailError;
+    if (!password) newErrors.password = "Enter your password";
     return newErrors;
   };
 
@@ -38,7 +41,7 @@ export default function Login() {
 
     const newErrors = validate();
     setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
+    if (Object.keys(newErrors).length > 0) return focusFirstError(newErrors);
 
     setSubmitting(true);
     try {
@@ -53,34 +56,34 @@ export default function Login() {
   };
 
   return (
-    <div className="auth-page">
+    <AuthLayout>
       <form className="auth-card" onSubmit={handleSubmit} noValidate>
-        <Brand />
         <h1>Log in</h1>
-        <p className="auth-subtitle">Welcome back! Log in to see your applications.</p>
+        <p className="auth-subtitle">Welcome back. Log in to see your applications.</p>
 
-        {sessionExpired && !serverError && (
-          <div className="alert-info">Your session expired. Please log in again.</div>
-        )}
-        {serverError && <div className="alert-error" role="alert">{serverError}</div>}
+        {sessionExpired && !serverError && <Notice>Your session expired. Please log in again.</Notice>}
+        <ErrorAlert message={serverError} />
 
-        <label htmlFor="email">Email</label>
-        <input
+        <Field
           id="email"
+          label="Email"
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={clearOnChange(setEmail, setErrors, "email")}
+          error={errors.email}
+          maxLength={LIMITS.email}
+          autoComplete="email"
         />
-        {errors.email && <p className="field-error">{errors.email}</p>}
-
-        <label htmlFor="password">Password</label>
-        <input
+        <Field
           id="password"
+          label="Password"
           type="password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={clearOnChange(setPassword, setErrors, "password")}
+          error={errors.password}
+          maxLength={LIMITS.password}
+          autoComplete="current-password"
         />
-        {errors.password && <p className="field-error">{errors.password}</p>}
 
         <button type="submit" className="btn" disabled={submitting}>
           {submitting && <Spinner small />}
@@ -88,15 +91,13 @@ export default function Login() {
         </button>
 
         {/* One-click demo for visitors: /demo logs in as the demo user */}
-        <div className="demo-box">
-          <p>Just looking around?</p>
-          <Link to="/demo" className="btn btn-outline">Try the demo account</Link>
-        </div>
+        <Link to="/demo" className="btn btn-outline demo-btn">Try the demo account</Link>
+        <p className="auth-hint">Sample data, no sign-up needed.</p>
 
         <p className="auth-switch">
           No account? <Link to="/register">Register</Link>
         </p>
       </form>
-    </div>
+    </AuthLayout>
   );
 }

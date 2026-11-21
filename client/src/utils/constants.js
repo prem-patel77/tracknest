@@ -20,6 +20,10 @@ export const STATUS_COLORS = Object.fromEntries(
   STATUSES.map((status) => [status, `var(--status-${status.toLowerCase()})`])
 );
 
+// The shared demo account (created by `npm run seed`). The server blocks profile and
+// password changes for it, so the Profile page uses this email to explain why.
+export const DEMO_EMAIL = "demo@tracknest.dev";
+
 // Max text lengths (must match server/utils/validators.js and the columns in schema.sql)
 export const LIMITS = {
   name: 100,

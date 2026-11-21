@@ -1,4 +1,5 @@
 import { Component } from "react";
+import AuthLayout from "./AuthLayout";
 
 // Safety net for bugs: if any component crashes while rendering, React would show a blank page.
 // An error boundary catches the crash and shows this message instead.
@@ -18,7 +19,7 @@ export default class ErrorBoundary extends Component {
     if (!this.state.hasError) return this.props.children;
 
     return (
-      <div className="auth-page">
+      <AuthLayout>
         <div className="auth-card status-card">
           <div className="status-code">Oops</div>
           <h1>Something went wrong</h1>
@@ -27,7 +28,7 @@ export default class ErrorBoundary extends Component {
             Reload TrackNest
           </button>
         </div>
-      </div>
+      </AuthLayout>
     );
   }
 }

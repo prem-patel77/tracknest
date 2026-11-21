@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { STATUSES, LIMITS } from "../utils/constants";
-import Spinner from "./Spinner";
+import { focusFirstError } from "../utils/forms";
 import { getErrorMessage } from "../utils/getErrorMessage";
+import Field from "./Field";
+import ErrorAlert from "./ErrorAlert";
+import Spinner from "./Spinner";
 
 // Used by both the Add Job and Edit Job pages.
 // - initialValues: starting field values (empty for "add", the saved job for "edit")
@@ -25,22 +28,24 @@ export default function JobForm({ initialValues = EMPTY_JOB, onSubmit, submitLab
   const [serverError, setServerError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // One handler for every input: update the field whose name matches
+  // One handler for every input: update the field whose name matches, and clear its error
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+    setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
-  // Check the inputs before calling the API
+  // Check the inputs before calling the API (errors are added in the order the fields appear)
   const validate = () => {
     const newErrors = {};
-    if (!form.company.trim()) newErrors.company = "Company is required";
-    if (!form.job_title.trim()) newErrors.job_title = "Job title is required";
+    if (!form.company.trim()) newErrors.company = "Enter the company name";
+    if (!form.job_title.trim()) newErrors.job_title = "Enter the job title";
     if (form.job_url.trim()) {
       try {
         const { protocol } = new URL(form.job_url.trim());
         if (protocol !== "http:" && protocol !== "https:") throw new Error("not a web link");
       } catch {
-        newErrors.job_url = "Please enter a valid URL starting with http:// or https://";
+        newErrors.job_url = "Enter a web link that starts with http:// or https://";
       }
     }
     return newErrors;
@@ -52,7 +57,7 @@ export default function JobForm({ initialValues = EMPTY_JOB, onSubmit, submitLab
 
     const newErrors = validate();
     setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
+    if (Object.keys(newErrors).length > 0) return focusFirstError(newErrors);
 
     setSubmitting(true);
     try {
@@ -68,56 +73,75 @@ export default function JobForm({ initialValues = EMPTY_JOB, onSubmit, submitLab
     }
   };
 
+  // The ids below match the keys in `form` and `errors`, so one handler can serve every field
   return (
-    <form className="form-card" onSubmit={handleSubmit} noValidate>
-      {serverError && <div className="alert-error" role="alert">{serverError}</div>}
+    <form className="form-stack" onSubmit={handleSubmit} noValidate>
+      {/* Module 1: what the job is. .form-row puts two fields side by side on wide screens */}
+      <section className="module">
+        <h2 className="module-tab">Job</h2>
+        <div className="module-body">
+          <div className="form-row">
+            <Field
+              id="company"
+              label="Company"
+              required
+              value={form.company}
+              onChange={handleChange}
+              error={errors.company}
+              maxLength={LIMITS.company}
+            />
+            <Field
+              id="job_title"
+              label="Job title"
+              required
+              value={form.job_title}
+              onChange={handleChange}
+              error={errors.job_title}
+              maxLength={LIMITS.job_title}
+            />
+          </div>
+          <div className="form-row">
+            <Field id="location" label="Location" value={form.location} onChange={handleChange} maxLength={LIMITS.location} />
+            <Field id="salary" label="Salary" value={form.salary} onChange={handleChange} maxLength={LIMITS.salary} />
+          </div>
+          <Field
+            id="job_url"
+            label="Job link"
+            type="url"
+            value={form.job_url}
+            onChange={handleChange}
+            error={errors.job_url}
+            placeholder="https://..."
+          />
+        </div>
+      </section>
 
-      {/* .form-row puts two fields side by side on wide screens and stacks them on phones */}
-      <div className="form-row">
-        <div>
-          <label htmlFor="company">Company *</label>
-          <input id="company" name="company" value={form.company} onChange={handleChange} maxLength={LIMITS.company} />
-          {errors.company && <p className="field-error">{errors.company}</p>}
+      {/* Module 2: where it stands */}
+      <section className="module">
+        <h2 className="module-tab">Status and notes</h2>
+        <div className="module-body">
+          <div className="form-row">
+            <Field as="select" id="status" label="Status" value={form.status} onChange={handleChange}>
+              {STATUSES.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </Field>
+            <Field id="deadline" label="Deadline" type="date" value={form.deadline} onChange={handleChange} />
+          </div>
+          <Field
+            as="textarea"
+            id="notes"
+            label="Notes"
+            rows="4"
+            value={form.notes}
+            onChange={handleChange}
+            maxLength={LIMITS.notes}
+          />
         </div>
-        <div>
-          <label htmlFor="job_title">Job title *</label>
-          <input id="job_title" name="job_title" value={form.job_title} onChange={handleChange} maxLength={LIMITS.job_title} />
-          {errors.job_title && <p className="field-error">{errors.job_title}</p>}
-        </div>
-      </div>
+      </section>
 
-      <div className="form-row">
-        <div>
-          <label htmlFor="location">Location</label>
-          <input id="location" name="location" value={form.location} onChange={handleChange} maxLength={LIMITS.location} />
-        </div>
-        <div>
-          <label htmlFor="salary">Salary</label>
-          <input id="salary" name="salary" value={form.salary} onChange={handleChange} maxLength={LIMITS.salary} />
-        </div>
-      </div>
-
-      <div className="form-row">
-        <div>
-          <label htmlFor="status">Status</label>
-          <select id="status" name="status" value={form.status} onChange={handleChange}>
-            {STATUSES.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label htmlFor="deadline">Deadline</label>
-          <input id="deadline" name="deadline" type="date" value={form.deadline} onChange={handleChange} />
-        </div>
-      </div>
-
-      <label htmlFor="job_url">Job URL</label>
-      <input id="job_url" name="job_url" value={form.job_url} onChange={handleChange} placeholder="https://..." />
-      {errors.job_url && <p className="field-error">{errors.job_url}</p>}
-
-      <label htmlFor="notes">Notes</label>
-      <textarea id="notes" name="notes" rows="4" value={form.notes} onChange={handleChange} maxLength={LIMITS.notes} />
+      {/* A save error sits right above the buttons, where the user is looking */}
+      <ErrorAlert message={serverError} />
 
       <div className="form-actions">
         <button type="submit" className="btn btn-inline" disabled={submitting}>

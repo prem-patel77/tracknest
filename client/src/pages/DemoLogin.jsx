@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
-import Brand from "../components/Brand";
+import AuthLayout from "../components/AuthLayout";
 import ErrorAlert from "../components/ErrorAlert";
 import SkeletonRows from "../components/SkeletonRows";
 import SlowNote from "../components/SlowNote";
+import { DEMO_EMAIL } from "../utils/constants";
 import { getErrorMessage } from "../utils/getErrorMessage";
 
 // Public demo account (created by `npm run seed`). The password is not a secret:
 // it is already shown in the README so anyone can try the app.
-const DEMO_EMAIL = "demo@tracknest.dev";
 const DEMO_PASSWORD = "Demo1234!";
 
 // Logs in as the demo user and opens the dashboard. If it fails, the message is shown on the page.
@@ -43,9 +43,8 @@ export default function DemoLogin() {
   // Error state: a red message with a Try again button, plus ways out
   if (error) {
     return (
-      <div className="auth-page">
+      <AuthLayout>
         <div className="auth-card">
-          <Brand />
           <h1>Demo unavailable</h1>
           <p className="auth-subtitle">We could not open the shared demo account.</p>
           <ErrorAlert message={error} onRetry={retry} />
@@ -54,16 +53,15 @@ export default function DemoLogin() {
             <Link to="/">Back to home</Link>
           </div>
         </div>
-      </div>
+      </AuthLayout>
     );
   }
 
   // Loading state: grey rows in the shape of the dashboard table. The server is on a
   // free tier, so the first request can be slow (SlowNote appears after 4 seconds).
   return (
-    <div className="auth-page">
+    <AuthLayout>
       <div className="auth-card" aria-busy="true">
-        <Brand />
         <h1>Opening the demo</h1>
         <p className="auth-subtitle" role="status">Signing in to the shared demo account...</p>
         <div className="card demo-skeleton">
@@ -71,6 +69,6 @@ export default function DemoLogin() {
         </div>
         <SlowNote />
       </div>
-    </div>
+    </AuthLayout>
   );
 }

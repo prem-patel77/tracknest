@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import AuthLayout from "../components/AuthLayout";
+import Field from "../components/Field";
+import ErrorAlert from "../components/ErrorAlert";
 import Spinner from "../components/Spinner";
-import Brand from "../components/Brand";
 import { LIMITS } from "../utils/constants";
+import { clearOnChange, focusFirstError, validateConfirm, validateEmail, validatePassword } from "../utils/forms";
 import { getErrorMessage } from "../utils/getErrorMessage";
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function Register() {
   const { user, loading, register } = useAuth();
@@ -26,13 +27,13 @@ export default function Register() {
   // Same rules as the server (password min 8 chars), so errors show instantly
   const validate = () => {
     const newErrors = {};
-    if (!name.trim()) newErrors.name = "Name is required";
-    if (!email.trim()) newErrors.email = "Email is required";
-    else if (!EMAIL_REGEX.test(email.trim())) newErrors.email = "Please enter a valid email";
-    if (!password) newErrors.password = "Password is required";
-    else if (password.length < 8) newErrors.password = "Password must be at least 8 characters";
-    else if (password.length > LIMITS.password) newErrors.password = `Password must be at most ${LIMITS.password} characters`;
-    if (confirmPassword !== password) newErrors.confirmPassword = "Passwords do not match";
+    if (!name.trim()) newErrors.name = "Enter your name";
+    const emailError = validateEmail(email);
+    if (emailError) newErrors.email = emailError;
+    const passwordError = validatePassword(password);
+    if (passwordError) newErrors.password = passwordError;
+    const confirmError = validateConfirm(confirmPassword, password);
+    if (confirmError) newErrors.confirmPassword = confirmError;
     return newErrors;
   };
 
@@ -42,7 +43,7 @@ export default function Register() {
 
     const newErrors = validate();
     setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
+    if (Object.keys(newErrors).length > 0) return focusFirstError(newErrors);
 
     setSubmitting(true);
     try {
@@ -57,67 +58,63 @@ export default function Register() {
   };
 
   return (
-    <div className="auth-page">
+    <AuthLayout>
       <form className="auth-card" onSubmit={handleSubmit} noValidate>
-        <Brand />
         <h1>Create account</h1>
         <p className="auth-subtitle">Start tracking your internship applications.</p>
 
-        {serverError && <div className="alert-error" role="alert">{serverError}</div>}
+        <ErrorAlert message={serverError} />
 
-        <label htmlFor="name">Name</label>
-        <input
+        <Field
           id="name"
-          type="text"
+          label="Name"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={clearOnChange(setName, setErrors, "name")}
+          error={errors.name}
           maxLength={LIMITS.name}
           autoComplete="name"
         />
-        {errors.name && <p className="field-error">{errors.name}</p>}
-
-        <label htmlFor="email">Email</label>
-        <input
+        <Field
           id="email"
+          label="Email"
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={clearOnChange(setEmail, setErrors, "email")}
+          error={errors.email}
           maxLength={LIMITS.email}
           autoComplete="email"
         />
-        {errors.email && <p className="field-error">{errors.email}</p>}
-
-        <label htmlFor="password">Password</label>
-        <input
+        <Field
           id="password"
+          label="Password"
           type="password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={clearOnChange(setPassword, setErrors, "password")}
+          error={errors.password}
+          hint="At least 8 characters."
           maxLength={LIMITS.password}
           autoComplete="new-password"
         />
-        {errors.password && <p className="field-error">{errors.password}</p>}
-
-        <label htmlFor="confirmPassword">Confirm password</label>
-        <input
+        <Field
           id="confirmPassword"
+          label="Confirm password"
           type="password"
           value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
+          onChange={clearOnChange(setConfirmPassword, setErrors, "confirmPassword")}
+          error={errors.confirmPassword}
           maxLength={LIMITS.password}
           autoComplete="new-password"
         />
-        {errors.confirmPassword && <p className="field-error">{errors.confirmPassword}</p>}
 
         <button type="submit" className="btn" disabled={submitting}>
           {submitting && <Spinner small />}
-          {submitting ? "Creating account..." : "Register"}
+          {submitting ? "Creating account..." : "Create account"}
         </button>
 
         <p className="auth-switch">
           Already have an account? <Link to="/login">Log in</Link>
         </p>
       </form>
-    </div>
+    </AuthLayout>
   );
 }

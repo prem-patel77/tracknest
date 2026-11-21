@@ -1,8 +1,12 @@
 import { useState } from "react";
 import api from "../api/axios";
 import { useAuth } from "../context/useAuth";
+import Field from "../components/Field";
+import ErrorAlert from "../components/ErrorAlert";
+import Notice from "../components/Notice";
 import Spinner from "../components/Spinner";
-import { LIMITS } from "../utils/constants";
+import { DEMO_EMAIL, LIMITS } from "../utils/constants";
+import { clearOnChange, focusFirstError, validateConfirm, validateEmail, validatePassword } from "../utils/forms";
 import { getErrorMessage } from "../utils/getErrorMessage";
 
 // Two separate forms: one for name/email, one for the password.
@@ -13,7 +17,9 @@ export default function Profile() {
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);
   const [emailPassword, setEmailPassword] = useState(""); // only needed if the email changes
-  const [profileMsg, setProfileMsg] = useState({ type: "", text: "" });
+  const [profileErrors, setProfileErrors] = useState({}); // per-field messages
+  const [profileError, setProfileError] = useState(""); // message from the API
+  const [profileSaved, setProfileSaved] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
 
   // Show the password box only when the email was edited
@@ -21,10 +27,17 @@ export default function Profile() {
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
-    setProfileMsg({ type: "", text: "" });
-    if (!name.trim()) {
-      return setProfileMsg({ type: "error", text: "Name is required" });
-    }
+    setProfileError("");
+    setProfileSaved(false);
+
+    const newErrors = {};
+    if (!name.trim()) newErrors.name = "Enter your name";
+    const emailError = validateEmail(email);
+    if (emailError) newErrors.email = emailError;
+    if (emailChanged && !emailPassword) newErrors.emailPassword = "Enter your current password to change your email";
+    setProfileErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return focusFirstError(newErrors);
+
     setSavingProfile(true);
     try {
       const res = await api.put("/auth/profile", {
@@ -36,9 +49,9 @@ export default function Profile() {
       setName(res.data.user.name);
       setEmail(res.data.user.email);
       setEmailPassword("");
-      setProfileMsg({ type: "success", text: "Profile updated" });
+      setProfileSaved(true);
     } catch (err) {
-      setProfileMsg({ type: "error", text: getErrorMessage(err, "Could not update profile") });
+      setProfileError(getErrorMessage(err, "Could not update profile"));
     } finally {
       setSavingProfile(false);
     }
@@ -48,23 +61,25 @@ export default function Profile() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordMsg, setPasswordMsg] = useState({ type: "", text: "" });
+  const [passwordErrors, setPasswordErrors] = useState({});
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSaved, setPasswordSaved] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
-    setPasswordMsg({ type: "", text: "" });
+    setPasswordError("");
+    setPasswordSaved(false);
 
-    // Check on the client first so the user gets instant feedback
-    if (newPassword.length < 8) {
-      return setPasswordMsg({ type: "error", text: "New password must be at least 8 characters" });
-    }
-    if (newPassword.length > LIMITS.password) {
-      return setPasswordMsg({ type: "error", text: `New password must be at most ${LIMITS.password} characters` });
-    }
-    if (newPassword !== confirmPassword) {
-      return setPasswordMsg({ type: "error", text: "New passwords do not match" });
-    }
+    // Check on the client first so the user gets instant feedback (same rules as the server)
+    const newErrors = {};
+    if (!currentPassword) newErrors.currentPassword = "Enter your current password";
+    const newPasswordError = validatePassword(newPassword);
+    if (newPasswordError) newErrors.newPassword = newPasswordError;
+    const confirmError = validateConfirm(confirmPassword, newPassword);
+    if (confirmError) newErrors.confirmPassword = confirmError;
+    setPasswordErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return focusFirstError(newErrors);
 
     setSavingPassword(true);
     try {
@@ -72,9 +87,9 @@ export default function Profile() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setPasswordMsg({ type: "success", text: "Password updated" });
+      setPasswordSaved(true);
     } catch (err) {
-      setPasswordMsg({ type: "error", text: getErrorMessage(err, "Could not update password") });
+      setPasswordError(getErrorMessage(err, "Could not update password"));
     } finally {
       setSavingPassword(false);
     }
@@ -89,94 +104,125 @@ export default function Profile() {
         </div>
       </div>
 
-      <form className="form-card profile-card" onSubmit={handleProfileSubmit}>
-        <h2>Account details</h2>
-        {profileMsg.text && (
-          <div className={profileMsg.type === "error" ? "alert-error" : "alert-success"}>
-            {profileMsg.text}
-          </div>
+      <div className="form-stack">
+        {/* The server blocks these changes for the shared demo account, so say so up front */}
+        {user.email === DEMO_EMAIL && (
+          <Notice>
+            You are using the shared demo account, so profile and password changes are turned off.
+            Create your own account to try them.
+          </Notice>
         )}
 
-        <label htmlFor="name">Name</label>
-        <input id="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={LIMITS.name} required />
-
-        <label htmlFor="email">Email</label>
-        <input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          maxLength={LIMITS.email}
-          required
-        />
-
-        {emailChanged && (
-          <>
-            <label htmlFor="emailPassword">Current password (needed to change your email)</label>
-            <input
-              id="emailPassword"
-              type="password"
-              value={emailPassword}
-              onChange={(e) => setEmailPassword(e.target.value)}
-              autoComplete="current-password"
-              required
+        {/* onChange on the <form> catches typing in any of its fields: old messages go away once you edit */}
+        <form
+          className="module"
+          onSubmit={handleProfileSubmit}
+          onChange={() => {
+            setProfileSaved(false);
+            setProfileError("");
+          }}
+          noValidate
+        >
+          <h2 className="module-tab">Account details</h2>
+          <div className="module-body">
+            <Field
+              id="name"
+              label="Name"
+              value={name}
+              onChange={clearOnChange(setName, setProfileErrors, "name")}
+              error={profileErrors.name}
+              maxLength={LIMITS.name}
+              autoComplete="name"
             />
-          </>
-        )}
+            <Field
+              id="email"
+              label="Email"
+              type="email"
+              value={email}
+              onChange={clearOnChange(setEmail, setProfileErrors, "email")}
+              error={profileErrors.email}
+              maxLength={LIMITS.email}
+              autoComplete="email"
+            />
+            {emailChanged && (
+              <Field
+                id="emailPassword"
+                label="Current password"
+                type="password"
+                hint="Needed to change your email."
+                value={emailPassword}
+                onChange={clearOnChange(setEmailPassword, setProfileErrors, "emailPassword")}
+                error={profileErrors.emailPassword}
+                autoComplete="current-password"
+              />
+            )}
 
-        <div className="form-actions">
-          <button className="btn btn-inline" disabled={savingProfile}>
-            {savingProfile && <Spinner small />}
-            {savingProfile ? "Saving..." : "Save changes"}
-          </button>
-        </div>
-      </form>
+            <ErrorAlert message={profileError} />
+            {profileSaved && <Notice type="success">Profile updated.</Notice>}
 
-      <form className="form-card profile-card" onSubmit={handlePasswordSubmit}>
-        <h2>Change password</h2>
-        {passwordMsg.text && (
-          <div className={passwordMsg.type === "error" ? "alert-error" : "alert-success"}>
-            {passwordMsg.text}
+            <div className="form-actions">
+              <button type="submit" className="btn btn-inline" disabled={savingProfile}>
+                {savingProfile && <Spinner small />}
+                {savingProfile ? "Saving..." : "Save changes"}
+              </button>
+            </div>
           </div>
-        )}
+        </form>
 
-        <label htmlFor="currentPassword">Current password</label>
-        <input
-          id="currentPassword"
-          type="password"
-          value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
-          autoComplete="current-password"
-          required
-        />
+        <form
+          className="module"
+          onSubmit={handlePasswordSubmit}
+          onChange={() => {
+            setPasswordSaved(false);
+            setPasswordError("");
+          }}
+          noValidate
+        >
+          <h2 className="module-tab">Change password</h2>
+          <div className="module-body">
+            <Field
+              id="currentPassword"
+              label="Current password"
+              type="password"
+              value={currentPassword}
+              onChange={clearOnChange(setCurrentPassword, setPasswordErrors, "currentPassword")}
+              error={passwordErrors.currentPassword}
+              autoComplete="current-password"
+            />
+            <Field
+              id="newPassword"
+              label="New password"
+              type="password"
+              hint="At least 8 characters."
+              value={newPassword}
+              onChange={clearOnChange(setNewPassword, setPasswordErrors, "newPassword")}
+              error={passwordErrors.newPassword}
+              maxLength={LIMITS.password}
+              autoComplete="new-password"
+            />
+            <Field
+              id="confirmPassword"
+              label="Confirm new password"
+              type="password"
+              value={confirmPassword}
+              onChange={clearOnChange(setConfirmPassword, setPasswordErrors, "confirmPassword")}
+              error={passwordErrors.confirmPassword}
+              maxLength={LIMITS.password}
+              autoComplete="new-password"
+            />
 
-        <label htmlFor="newPassword">New password</label>
-        <input
-          id="newPassword"
-          type="password"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          autoComplete="new-password"
-          required
-        />
+            <ErrorAlert message={passwordError} />
+            {passwordSaved && <Notice type="success">Password updated.</Notice>}
 
-        <label htmlFor="confirmPassword">Confirm new password</label>
-        <input
-          id="confirmPassword"
-          type="password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          autoComplete="new-password"
-          required
-        />
-
-        <div className="form-actions">
-          <button className="btn btn-inline" disabled={savingPassword}>
-            {savingPassword && <Spinner small />}
-            {savingPassword ? "Updating..." : "Update password"}
-          </button>
-        </div>
-      </form>
+            <div className="form-actions">
+              <button type="submit" className="btn btn-inline" disabled={savingPassword}>
+                {savingPassword && <Spinner small />}
+                {savingPassword ? "Updating..." : "Update password"}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

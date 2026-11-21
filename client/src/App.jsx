@@ -11,10 +11,12 @@ import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
-import PageLoader from "./components/PageLoader";
+import StatsSkeleton from "./components/StatsSkeleton";
 
 // Statistics pulls in the big chart library (recharts), so it is only downloaded
 // when the user opens that page. This keeps the first page load small.
+// While it downloads, the Suspense fallback below shows the same placeholders the page
+// shows while its numbers load (StatsSkeleton), so there is no flash between the two.
 const Statistics = lazy(() => import("./pages/Statistics"));
 
 function App() {
@@ -34,7 +36,7 @@ function App() {
         <Route
           path="/statistics"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <Suspense fallback={<StatsSkeleton />}>
               <Statistics />
             </Suspense>
           }
