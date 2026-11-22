@@ -14,9 +14,17 @@ import { getErrorMessage } from "../utils/getErrorMessage";
 // Recharts draws plain SVG, so we pass var(--...) strings instead of hex codes.
 const AXIS_TICK = { fill: "var(--ink-muted)", fontSize: 12 };
 
-// People who ask for less motion get charts that appear without the 400ms grow-in.
+// People who ask for less motion get charts that appear without the grow-in.
 // (CSS cannot stop recharts' animation, because recharts animates with JavaScript, so we check here.)
 const ANIMATE = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// One short ease-out grow-in when a chart first appears. Both charts spread this object,
+// so they always match (recharts cannot read our CSS motion variables, hence the plain number).
+const CHART_ANIMATION = {
+  isAnimationActive: ANIMATE,
+  animationDuration: 300,
+  animationEasing: "ease-out",
+};
 
 // "2026-11" -> "Nov" (under each bar) or "November 2026" (in the tooltip and the table)
 const monthDate = (value) => {
@@ -64,10 +72,10 @@ function StatusChart({ byStatus, total }) {
               outerRadius="90%"
               stroke="var(--surface)"
               strokeWidth={2}
-              isAnimationActive={ANIMATE}
-              animationDuration={400}
+              {...CHART_ANIMATION}
             />
-            <Tooltip content={<ChartTooltip unit="jobs" />} />
+            {/* The tooltip appears instantly (no sliding box following the mouse) */}
+            <Tooltip content={<ChartTooltip unit="jobs" />} isAnimationActive={false} />
           </PieChart>
         </ResponsiveContainer>
 
@@ -126,14 +134,14 @@ function MonthChart({ byMonth }) {
                 content={<ChartTooltip unit="jobs added" color="var(--teal-main)" />}
                 labelFormatter={longMonth}
                 cursor={{ fill: "var(--wash)" }}
+                isAnimationActive={false}
               />
               <Bar
                 dataKey="count"
                 fill="var(--teal-main)"
                 barSize={20}
                 radius={[4, 4, 0, 0]}
-                isAnimationActive={ANIMATE}
-                animationDuration={400}
+                {...CHART_ANIMATION}
               />
             </BarChart>
           </ResponsiveContainer>

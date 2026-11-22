@@ -327,27 +327,28 @@ Deep Rail Teal panel with the logo and one line ("Know where every application s
 A short confirmation after a job is added ("Job added"), edited ("Changes saved") or deleted ("Job deleted"). It uses the success colours (`--success` text on `--success-bg`, `--success-line` border, 6px radius, a check icon before the text), so it follows the theme. No shadow (hairline rule). It sits at the bottom right above 960px and along the bottom edge, centred, at 960px and below. It stays for 5 seconds or until the small close button (36px, 44px on touch) is pressed, and a newer message replaces it. It lives above the router, so a message set just before the app goes back to the dashboard is still shown there. The region that holds it is always on the page with `role="status"`, so screen readers announce the text without moving the keyboard focus. Errors never use a toast: they stay in the red alert on the page.
 
 ### Charts (Statistics)
-Each chart sits in a module with a header tab. Pie by status uses the six status colours with a text legend that lists each status and its count (colour is never the only label). Bar chart per month uses Brand Teal bars, `#e5eeed` horizontal gridlines only, 12px Ink Muted axis labels, and a tooltip with a 1px hairline border and 6px radius. No 3D, no gradients, no decorative legends. Both charts animate once on mount, at most 400ms, and never re-animate on re-render.
+Each chart sits in a module with a header tab. Pie by status uses the six status colours with a text legend that lists each status and its count (colour is never the only label). Bar chart per month uses Brand Teal bars, `#e5eeed` horizontal gridlines only, 12px Ink Muted axis labels, and a tooltip with a 1px hairline border and 6px radius. No 3D, no gradients, no decorative legends. Both charts animate once on mount (300ms, ease-out), and never re-animate on re-render.
 
 ## Motion
 
 Motion confirms, it does not decorate. This is a tool opened many times a day, so almost nothing moves.
 
-**Tokens (in `index.css`):** `--ease-out: cubic-bezier(0.23, 1, 0.32, 1)`; `--ease-in-out: cubic-bezier(0.77, 0, 0.175, 1)`; `--dur-fast: 120ms`; `--dur: 180ms`; `--dur-slow: 250ms`.
+**Tokens (in `index.css`):** `--ease-out: cubic-bezier(0.23, 1, 0.32, 1)`; `--dur-fast: 120ms`; `--dur: 180ms`. Every duration in the CSS uses one of these two; the only plain millisecond value is the 200ms delay before the table dims.
 
 | Moment | Purpose | Motion |
 | --- | --- | --- |
-| Button, icon button press | Feedback | `transform: scale(0.97)`, 100ms, `--ease-out` |
-| Row, link, rail hover | Feedback | background/colour only, `--dur-fast`, hover-capable pointers only |
-| Input focus | State | border and ring, `--dur-fast` |
-| Search, filter, sort, page change | Preventing a jarring change | existing rows dim to 55% opacity in 150ms while the next page loads; no sliding |
+| Button, icon button press | Feedback | `transform: scale(0.97)`, `--dur-fast`, `--ease-out` |
+| Link, rail hover | Feedback | background/colour only, `--dur-fast`, hover-capable pointers only |
+| Table row hover | (none) | instant background tint; rows are scanned quickly, so no fade |
+| Input focus | State | border colour fades in `--dur-fast`; the ring appears at once |
+| Search, filter, sort, page change | Preventing a jarring change | after a 200ms delay (so fast responses never flicker), existing rows dim to 55% opacity in `--dur-fast` while the next page loads; coming back to full opacity is instant; no sliding |
 | Toast appears | Confirming an action | `opacity 0 -> 1` and `translateY(8px) -> none` in 180ms, `--ease-out`. It leaves by itself after 5s, or at once when dismissed (reduced motion: opacity only) |
-| Confirmation modal open | Spatial consistency | overlay fades in 150ms; panel `opacity 0 -> 1` and `translateY(8px) scale(0.98) -> none` in 180ms, `--ease-out`. Closing is instant |
+| Confirmation modal open | Spatial consistency | overlay fades in `--dur-fast`; panel `opacity 0 -> 1` and `translateY(8px) scale(0.98) -> none` in 180ms, `--ease-out`. Closing is instant |
 | Theme switch | (none) | instant colour change, no cross-fade, no transition on the whole page |
-| Skeleton | State | slow shimmer, 1.2s linear loop |
+| Skeleton | State | a lighter band sweeps across with `transform: translateX` on an `::after` layer, 1.2s linear loop |
 | Spinner | State | rotation, 0.7s linear (stays on under reduced motion) |
-| Empty state, first view | Rare tier | single 200ms fade-up (8px), once |
-| Charts | State | one mount animation, at most 400ms |
+| Empty state, first view | Rare tier | single `--dur` fade-up (8px), once |
+| Charts | State | one mount animation, 300ms, ease-out. The hover tooltip is not animated |
 
 **Never:** keyboard-driven actions animate; `transition: all`; `scale(0)`; `ease-in`; animating width, height, margin or top/left; page-load staggers on the table; bouncing, confetti, or celebration on an Offer.
 Only `transform`, `opacity`, `background-color`, `color` and `border-color` are ever transitioned, each named explicitly.

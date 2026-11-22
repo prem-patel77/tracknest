@@ -114,12 +114,10 @@
   /* Tells the browser this is a light page (scrollbars, date pickers, form controls) */
   color-scheme: light;
 
-  /* Motion: two curves, three speeds (see "Motion" in DESIGN.md) */
+  /* Motion: one curve, two speeds (see "Motion" in DESIGN.md) */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1); /* things appearing or reacting */
-  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1); /* things moving across the screen (nothing uses it yet) */
-  --dur-fast: 120ms;
-  --dur: 180ms;
-  --dur-slow: 250ms;
+  --dur-fast: 120ms; /* hover, press, small fades */
+  --dur: 180ms; /* things that appear: toast, popup, empty state */
 }
 
 /* ---------- Dark theme ----------
@@ -322,7 +320,7 @@ a {
   text-decoration: none;
   cursor: pointer;
   transition: background-color var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out), transform 100ms var(--ease-out);
+    border-color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
 
 .btn:active:not(:disabled) {
@@ -389,7 +387,7 @@ a {
   border-radius: var(--radius);
   cursor: pointer;
   transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out),
-    transform 100ms var(--ease-out);
+    transform var(--dur-fast) var(--ease-out);
 }
 
 /* Same press feedback as the big buttons */
@@ -432,7 +430,7 @@ textarea {
   font: inherit; /* 16px, so phones do not zoom in when you tap a field */
   background: var(--surface);
   color: var(--ink);
-  transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+  transition: border-color var(--dur-fast) var(--ease-out);
 }
 
 input:focus,
@@ -874,7 +872,6 @@ textarea {
 /* ---------- Job table ---------- */
 .table-wrap {
   overflow-x: auto; /* safety net: the table scrolls inside its box, never the page */
-  transition: opacity 150ms var(--ease-out); /* fades back in when .is-fetching is removed */
 }
 
 .job-table {
@@ -908,10 +905,6 @@ textarea {
 
 .job-table tbody tr:last-child td {
   border-bottom: none;
-}
-
-.job-table tbody tr {
-  transition: background-color var(--dur-fast) var(--ease-out);
 }
 
 /* The colored strip at the start of a row shows the job's status (like a league zone) */
@@ -1137,12 +1130,24 @@ textarea {
   color: var(--ink-muted);
 }
 
+/* A grey block with a lighter band sweeping across it.
+   The band is the ::after layer, and it moves with transform (cheap for the browser),
+   not by animating the background. overflow: hidden keeps the band inside the block. */
 .skeleton {
   display: inline-block;
-  background: linear-gradient(90deg, var(--skeleton-a) 25%, var(--skeleton-b) 50%, var(--skeleton-a) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.2s linear infinite;
+  position: relative;
+  overflow: hidden;
+  background: var(--skeleton-a);
   border-radius: var(--radius-sm);
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, var(--skeleton-b), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 1.2s linear infinite;
 }
 
 .skeleton-value {
@@ -1198,9 +1203,12 @@ textarea {
   font-size: 0.9rem;
 }
 
+/* Rows dim after a 200ms delay (fast responses never flicker). The transition is only on this
+   class, so going back to full opacity is instant. */
 .is-fetching {
   opacity: 0.55;
   pointer-events: none;
+  transition: opacity var(--dur-fast) var(--ease-out) 200ms;
 }
 
 .center-text {
@@ -1211,7 +1219,7 @@ textarea {
 .empty-state {
   text-align: center;
   padding: 56px var(--space-5);
-  animation: rise 200ms var(--ease-out);
+  animation: rise var(--dur) var(--ease-out);
 }
 
 .empty-state h2 {
@@ -1258,7 +1266,7 @@ textarea {
 }
 
 @keyframes shimmer {
-  to { background-position: -200% 0; }
+  to { transform: translateX(100%); }
 }
 
 @keyframes rise {
@@ -1275,7 +1283,7 @@ textarea {
   justify-content: center;
   padding: var(--space-4);
   z-index: 100;
-  animation: fade-in 150ms var(--ease-out);
+  animation: fade-in var(--dur-fast) var(--ease-out);
 }
 
 .modal {
@@ -1790,14 +1798,14 @@ textarea {
 /* People who ask their system for less motion: no sliding, no shimmer.
    Quick fades and the loading spinner stay, because they explain what is happening. */
 @media (prefers-reduced-motion: reduce) {
-  .skeleton {
-    animation: none;
+  .skeleton::after {
+    animation: none; /* the band stays parked off to the left, so the block is plain grey */
   }
 
   .empty-state,
   .modal,
   .toast {
-    animation: fade-in 150ms linear;
+    animation: fade-in var(--dur-fast) linear;
   }
 
   .btn:active:not(:disabled),
