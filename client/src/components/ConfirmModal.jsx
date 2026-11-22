@@ -63,12 +63,12 @@ export default function ConfirmModal({ message, onConfirm, onCancel, busy }) {
         <h2 id="confirm-title">Delete this job?</h2>
         <p>{message}</p>
         <div className="form-actions">
+          <button className="btn btn-inline btn-outline" onClick={onCancel} disabled={busy} ref={cancelRef}>
+            Cancel
+          </button>
           <button className="btn btn-inline btn-danger" onClick={onConfirm} disabled={busy}>
             {busy && <Spinner small />}
             {busy ? "Deleting..." : "Delete"}
-          </button>
-          <button className="btn btn-inline btn-outline" onClick={onCancel} disabled={busy} ref={cancelRef}>
-            Cancel
           </button>
         </div>
       </div>

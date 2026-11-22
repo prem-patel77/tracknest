@@ -5,11 +5,13 @@ import JobForm from "../components/JobForm";
 import FormSkeleton from "../components/FormSkeleton";
 import SlowNote from "../components/SlowNote";
 import ErrorAlert from "../components/ErrorAlert";
+import { useToast } from "../context/useToast";
 import { getErrorMessage } from "../utils/getErrorMessage";
 
 export default function EditJob() {
   const { id } = useParams(); // the :id from the URL /jobs/:id/edit
   const navigate = useNavigate();
+  const showToast = useToast();
 
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -47,6 +49,7 @@ export default function EditJob() {
 
   const handleSubmit = async (data) => {
     await api.put(`/jobs/${id}`, data);
+    showToast("Changes saved");
     navigate("/dashboard");
   };
 
@@ -70,14 +73,14 @@ export default function EditJob() {
     );
   } else {
     // Only rendered after the job has loaded, so the form starts with the saved values
-    body = <JobForm initialValues={job} onSubmit={handleSubmit} submitLabel="Save Changes" />;
+    body = <JobForm initialValues={job} onSubmit={handleSubmit} submitLabel="Save changes" />;
   }
 
   return (
     <div>
       <div className="page-header">
         <div>
-          <h1>Edit Job</h1>
+          <h1>Edit job</h1>
           <p className="page-subtitle">Update the details or move it to the next stage.</p>
         </div>
       </div>

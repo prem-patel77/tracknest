@@ -204,8 +204,8 @@ export default function Statistics() {
     const cards = [
       { label: "Total", value: total },
       { label: "Active", value: active },
-      { label: "Interviews", value: byStatus.Interview },
-      { label: "Offers", value: byStatus.Offer },
+      { label: "Interview", value: byStatus.Interview },
+      { label: "Offer", value: byStatus.Offer },
       { label: "Rejected", value: byStatus.Rejected },
     ];
 

@@ -18,7 +18,7 @@ export default function Layout() {
   // Sidebar links: where they go, their icon and their label
   const links = [
     { to: "/dashboard", icon: "dashboard", label: "Dashboard" },
-    { to: "/jobs/new", icon: "plus", label: "Add Job" },
+    { to: "/jobs/new", icon: "plus", label: "Add job" },
     { to: "/statistics", icon: "chart", label: "Statistics" },
     { to: "/profile", icon: "user", label: "Profile" },
   ];

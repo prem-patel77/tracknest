@@ -8,17 +8,20 @@ import ErrorAlert from "../components/ErrorAlert";
 import EmptyState from "../components/EmptyState";
 import SkeletonRows from "../components/SkeletonRows";
 import SlowNote from "../components/SlowNote";
+import { useToast } from "../context/useToast";
 import { Icon } from "../components/Icons";
 import { STATUSES, SORT_OPTIONS } from "../utils/constants";
 import { describeDeadline, DEADLINE_ICON } from "../utils/format";
 import { getErrorMessage } from "../utils/getErrorMessage";
 
 export default function Dashboard() {
+  const showToast = useToast();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true); // true only until the FIRST page of jobs arrives
   const [loadedKey, setLoadedKey] = useState(""); // which search/filter/sort/page the shown jobs belong to
   const [statsLoading, setStatsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [statsError, setStatsError] = useState(""); // kept apart from `error`, so a good jobs request cannot hide a failed totals request
   const [jobToDelete, setJobToDelete] = useState(null); // job waiting for confirmation
   const [deleting, setDeleting] = useState(false);
 
@@ -63,8 +66,11 @@ export default function Dashboard() {
   const loadStats = () => {
     api
       .get("/jobs/stats")
-      .then((res) => setStats(res.data))
-      .catch((err) => setError(getErrorMessage(err, "Could not load totals")))
+      .then((res) => {
+        setStats(res.data);
+        setStatsError("");
+      })
+      .catch((err) => setStatsError(getErrorMessage(err, "Could not load totals")))
       .finally(() => setStatsLoading(false));
   };
 
@@ -101,6 +107,7 @@ export default function Dashboard() {
     setDeleting(true);
     try {
       await api.delete(`/jobs/${jobToDelete.id}`);
+      showToast("Job deleted");
       // Reload from the server so the list and the totals are both correct
       loadJobs();
       loadStats();
@@ -112,13 +119,11 @@ export default function Dashboard() {
     }
   };
 
-  // The five stat modules: a small tab with the name, and the number below it
+  // The stat modules: a small tab with the name, and the number below it.
+  // Total first, then one module per status, so the six statuses always add up to the Total.
   const cards = [
     { label: "Total", value: stats.total },
-    { label: "Applied", value: stats.byStatus.Applied ?? 0 },
-    { label: "Interview", value: stats.byStatus.Interview ?? 0 },
-    { label: "Offer", value: stats.byStatus.Offer ?? 0 },
-    { label: "Rejected", value: stats.byStatus.Rejected ?? 0 },
+    ...STATUSES.map((s) => ({ label: s, value: stats.byStatus[s] ?? 0 })),
   ];
 
   // True when the user is filtering, so we can show a different "empty" message
@@ -136,7 +141,7 @@ export default function Dashboard() {
       <div className="page-header">
         <div>
           <h1>Dashboard</h1>
-          <p className="page-subtitle">Your pipeline, ranked by what needs you next.</p>
+          <p className="page-subtitle">Your pipeline. Sort by deadline to see what needs you first.</p>
         </div>
       </div>
 
@@ -150,12 +155,23 @@ export default function Dashboard() {
         }}
       />
 
-      <div className="summary-cards">
+      {/* Totals have their own error box, because the cards would otherwise show a false 0.
+          If the list failed too (usually the same cause), one box is enough: its "Try again" reloads both */}
+      <ErrorAlert
+        message={error ? "" : statsError}
+        onRetry={() => {
+          setStatsError("");
+          setStatsLoading(true);
+          loadStats();
+        }}
+      />
+
+      <div className="summary-cards summary-cards-pipeline">
         {cards.map((card) => (
           <div className="summary-card" key={card.label}>
             <div className="summary-label">{card.label}</div>
             <div className="summary-value">
-              {statsLoading ? <span className="skeleton skeleton-value" /> : card.value}
+              {statsLoading ? <span className="skeleton skeleton-value" /> : statsError ? "–" : card.value}
             </div>
           </div>
         ))}
@@ -217,16 +233,16 @@ export default function Dashboard() {
       ) : (
         // While a new page/filter is loading, keep the old rows but fade them out
         <div className={fetching ? "table-wrap card is-fetching" : "table-wrap card"}>
-          <table className="job-table">
+          <table className="job-table" aria-label="Job applications" aria-busy={fetching}>
             <thead>
               <tr>
                 <th className="cell-zone" aria-hidden="true" />
-                <th className="cell-rank">#</th>
-                <th>Company</th>
-                <th>Position</th>
-                <th>Status</th>
-                <th>Progress</th>
-                <th>Deadline</th>
+                <th scope="col" className="cell-rank">#</th>
+                <th scope="col">Company</th>
+                <th scope="col">Position</th>
+                <th scope="col">Status</th>
+                <th scope="col">Progress</th>
+                <th scope="col">Deadline</th>
                 <th className="col-actions"><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
@@ -289,7 +305,7 @@ export default function Dashboard() {
       {/* Page controls: shown whenever there is at least one matching job */}
       {!loading && pagination.total > 0 && (
         <div className="pagination">
-          <span className="pagination-info">
+          <span className="pagination-info" aria-live="polite">
             {pagination.total} {pagination.total === 1 ? "job" : "jobs"}
           </span>
           <label className="pagination-size">

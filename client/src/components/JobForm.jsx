@@ -7,10 +7,10 @@ import Field from "./Field";
 import ErrorAlert from "./ErrorAlert";
 import Spinner from "./Spinner";
 
-// Used by both the Add Job and Edit Job pages.
+// Used by both the Add job and Edit job pages.
 // - initialValues: starting field values (empty for "add", the saved job for "edit")
 // - onSubmit: async function that receives the cleaned form data and saves it
-// - submitLabel: text on the button, e.g. "Add Job"
+// - submitLabel: text on the button, e.g. "Add job"
 const EMPTY_JOB = {
   company: "",
   job_title: "",

@@ -105,6 +105,7 @@
 
   /* Focus ring and the only shadow in the app (the popup) */
   --ring: 0 0 0 3px rgba(13, 148, 136, 0.3);
+  --focus-line: #0f766e; /* focus outline and focused-field border: 5.5:1 on white (the lighter teal was only 2.5:1) */
   --shadow-modal: 0 16px 40px rgba(15, 23, 42, 0.25);
 
   /* The little arrow on dropdowns. It is a picture, so its color must live here (per theme) */
@@ -113,10 +114,12 @@
   /* Tells the browser this is a light page (scrollbars, date pickers, form controls) */
   color-scheme: light;
 
-  /* Motion: one curve, three speeds (see "Motion" in DESIGN.md) */
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  /* Motion: two curves, three speeds (see "Motion" in DESIGN.md) */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1); /* things appearing or reacting */
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1); /* things moving across the screen (nothing uses it yet) */
   --dur-fast: 120ms;
   --dur: 180ms;
+  --dur-slow: 250ms;
 }
 
 /* ---------- Dark theme ----------
@@ -199,6 +202,7 @@
   --spinner-track-on-action: rgba(4, 32, 30, 0.3); /* the spinner inside a solid button is dark here */
 
   --ring: 0 0 0 3px rgba(45, 212, 191, 0.4);
+  --focus-line: #14b8a6; /* 6.8:1 on the dark surface */
   --shadow-modal: 0 16px 40px rgba(0, 0, 0, 0.6);
   --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239db8b5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
 }
@@ -253,7 +257,7 @@ a {
 
 /* Keyboard users see a clear outline on anything they tab to */
 :focus-visible {
-  outline: 2px solid var(--teal-light);
+  outline: 2px solid var(--focus-line);
   outline-offset: 2px;
 }
 
@@ -278,7 +282,10 @@ a {
   left: var(--space-3);
   top: -60px;
   z-index: 200;
-  padding: var(--space-2) var(--space-4);
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px; /* a touch-sized target when it appears */
+  padding: 0 var(--space-4);
   background: var(--teal-action);
   color: var(--on-action);
   border-radius: var(--radius);
@@ -323,8 +330,7 @@ a {
 }
 
 .btn:focus-visible {
-  outline: none;
-  box-shadow: var(--ring);
+  box-shadow: var(--ring); /* soft halo, plus the 2px outline from the global :focus-visible rule */
 }
 
 .btn:disabled {
@@ -382,7 +388,13 @@ a {
   border: none;
   border-radius: var(--radius);
   cursor: pointer;
-  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out),
+    transform 100ms var(--ease-out);
+}
+
+/* Same press feedback as the big buttons */
+.icon-btn:active {
+  transform: scale(0.97);
 }
 
 /* ---------- Forms ---------- */
@@ -427,8 +439,14 @@ input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  border-color: var(--teal-light);
+  border-color: var(--focus-line);
   box-shadow: var(--ring);
+}
+
+/* The little calendar icon inside a date field is a second tab stop: give it the same outline */
+input[type="date"]::-webkit-calendar-picker-indicator:focus-visible {
+  outline: 2px solid var(--focus-line);
+  outline-offset: 2px;
 }
 
 /* Our own dropdown arrow (its color is set per theme in --select-arrow) */
@@ -711,8 +729,13 @@ textarea {
   overflow: hidden;
   color: var(--rail-strong);
   font-weight: 500;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.2;
+  /* A name may use two lines ("Prem" / "Sharma") before it is cut with "...", because the
+     avatar and two icon buttons leave only about 80px of width */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow-wrap: anywhere;
 }
 
 /* The two small icon buttons in the sidebar: theme (sun / moon) and log out */
@@ -768,6 +791,12 @@ textarea {
   grid-template-columns: repeat(5, 1fr);
   gap: var(--space-3);
   margin-bottom: var(--space-5);
+}
+
+/* Dashboard: Total plus one module per status = 7. They fit in one row on a wide screen;
+   the narrower layouts are in the responsive section at the bottom of this file. */
+.summary-cards-pipeline {
+  grid-template-columns: repeat(7, 1fr);
 }
 
 /* A module = a white box with a hairline border and a small tinted tab on top.
@@ -845,6 +874,7 @@ textarea {
 /* ---------- Job table ---------- */
 .table-wrap {
   overflow-x: auto; /* safety net: the table scrolls inside its box, never the page */
+  transition: opacity 150ms var(--ease-out); /* fades back in when .is-fetching is removed */
 }
 
 .job-table {
@@ -878,6 +908,10 @@ textarea {
 
 .job-table tbody tr:last-child td {
   border-bottom: none;
+}
+
+.job-table tbody tr {
+  transition: background-color var(--dur-fast) var(--ease-out);
 }
 
 /* The colored strip at the start of a row shows the job's status (like a league zone) */
@@ -1023,22 +1057,24 @@ textarea {
 .pip {
   width: 16px;
   height: 8px;
+  border: 1px solid var(--field-border); /* an empty pip is an outline (3:1), a filled pip is solid */
   border-radius: 2px;
-  background: var(--line);
+  background: transparent;
 }
 
 .pip-on {
   background: var(--teal-main);
+  border-color: var(--teal-main);
 }
 
 .stage-offer .pip-on {
   background: var(--status-offer);
+  border-color: var(--status-offer);
 }
 
 /* Rejected: empty pips with a red outline (we do not know how far the job got) */
 .stage-rejected .pip {
-  background: transparent;
-  border: 1px solid var(--status-rejected);
+  border-color: var(--status-rejected);
 }
 
 /* ---------- Forms (add / edit job, profile): modules stacked 12px apart ---------- */
@@ -1165,7 +1201,6 @@ textarea {
 .is-fetching {
   opacity: 0.55;
   pointer-events: none;
-  transition: opacity 150ms var(--ease-out);
 }
 
 .center-text {
@@ -1260,6 +1295,43 @@ textarea {
 .modal p {
   margin: 0;
   color: var(--ink-muted);
+}
+
+/* ---------- Toast: a short confirmation ("Job added") ---------- */
+/* The region is always on the page (screen readers listen to it); it only takes clicks where the toast is.
+   Phones: along the bottom edge. Wider than 960px: bottom right. */
+.toast-region {
+  position: fixed;
+  z-index: 150; /* above the sticky top bar (20) and the popup (100) */
+  right: var(--space-4);
+  bottom: var(--space-4);
+  left: var(--space-4);
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 420px;
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-4);
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1px solid var(--success-line);
+  border-radius: var(--radius);
+  font-weight: 500;
+  pointer-events: auto;
+  animation: rise var(--dur) var(--ease-out);
+}
+
+.toast-text {
+  padding: var(--space-2) 0;
+}
+
+.toast .icon-btn {
+  color: inherit; /* the dismiss button follows the green text color */
 }
 
 @keyframes fade-in {
@@ -1723,19 +1795,58 @@ textarea {
   }
 
   .empty-state,
-  .modal {
+  .modal,
+  .toast {
     animation: fade-in 150ms linear;
   }
 
-  .btn:active:not(:disabled) {
+  .btn:active:not(:disabled),
+  .icon-btn:active {
     transform: none;
   }
 }
 
+/* Theme switch is instant (DESIGN.md): theme.js adds this class for one frame while the colors swap,
+   so hover transitions on buttons and fields do not fade between the two themes */
+.theme-switching,
+.theme-switching * {
+  transition: none !important;
+}
+
 /* ---------- Responsive design (keep these blocks LAST so they override the rules above) ---------- */
+
+/* Seven stat modules get too narrow below about 1100px: two rows of four, with Total twice as wide */
+@media (max-width: 1100px) {
+  .summary-cards-pipeline {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .summary-cards-pipeline .summary-card:first-child {
+    grid-column: span 2;
+  }
+}
+
+/* Wider than a tablet: the toast moves to the bottom right, next to the page content */
+@media (min-width: 961px) {
+  .toast-region {
+    left: auto;
+    right: var(--space-5);
+    bottom: var(--space-5);
+  }
+}
 
 /* Tablet and phone (up to 960px): the sidebar becomes a bar across the top, table rows stack */
 @media (max-width: 960px) {
+  /* Touch screens: every button and field is 44px tall */
+  :root {
+    --control-height: 44px;
+  }
+
+  .btn-small,
+  .pagination-size select {
+    min-height: 44px;
+  }
+
   .layout {
     flex-direction: column;
   }

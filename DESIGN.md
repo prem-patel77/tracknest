@@ -242,7 +242,7 @@ Both load from Google Fonts with `display=swap` (add the link to `client/index.h
 
 ### Hierarchy
 - **Display** (700, 2.375rem, 1.1): the number inside a stat module.
-- **Headline** (700, 1.875rem, 1.1; 1.5rem under 768px): the page title, one per page.
+- **Headline** (700, 1.875rem, 1.1; 1.5rem at 640px and below): the page title, one per page.
 - **Title** (600, 1.125rem, 1.25): module and chart titles, modal titles.
 - **Body** (400, 1rem, 1.5): forms, descriptions, helper text; lines up to 70ch. Inputs are always 16px so phones never zoom.
 - **Table** (400, 0.9375rem, 1.4): cells. Company name is 600.
@@ -254,17 +254,19 @@ Both load from Google Fonts with `display=swap` (add the link to `client/index.h
 
 ## Layout
 
-A fixed **rail** on the left (232px desktop, 200px tablet) and a main area that holds content up to 1240px, left-aligned. The user name, avatar, theme toggle and Log out sit at the bottom of the rail; the rail is the app's navigation bar (there is no separate top navbar on desktop, and on phones the rail becomes the top bar, so the toggle lives there too). Page padding is 36px desktop, 20px tablet, 16px phone.
+A fixed **rail** on the left, always 232px wide (there is no narrower tablet rail), and a main area that holds content up to 1240px, left-aligned. The user name, avatar, theme toggle and Log out sit at the bottom of the rail; the rail is the app's navigation bar (there is no separate top navbar on desktop, and at 960px and below the rail becomes the top bar, so the toggle lives there too). Page padding is 36px on wide screens and shrinks smoothly with the window (3% of its width, so 19-36px between 640 and 1200px wide); at 640px and below it is a fixed 16px.
 
 Spacing is a 4px base scale: 4, 8, 12, 16, 24, 32. Modules sit 12px apart, sections 24px apart, and there is more space above a heading than below it. Table rows are 48px tall minimum; touch targets are 44px.
 
-**Dashboard order:** title and subtitle, five stat modules (Total, Applied, Interview, Offer, Rejected), one toolbar row (search grows, then status select, sort select, Add job), the ranked table, then pagination.
+**Dashboard order:** title and subtitle, seven stat modules (Total, then Saved, Applied, OA, Interview, Offer, Rejected, so the six statuses always add up to the Total), one toolbar row (search grows, then status select, sort select, Add job), the ranked table, then pagination.
 
 **Responsive:**
-- 769-1024px: rail narrows to 200px, stat modules stay in one row of five.
-- 768px and below: the rail becomes a top bar (logo left, icon-only nav, 44px targets, avatar menu right). Stat modules go to two columns (Total spans two). Toolbar items each take a full row.
-- 375px (the floor): table rows become stacked fixtures (CSS grid on each row, header row hidden): top line is rank, company, status tag; second line is position; third line is pips and deadline; actions sit top right. No horizontal scrolling of the page or the table.
-- Forms are single column; the two-field rows stack under 768px.
+- Above 1100px: the rail is at the left and the seven stat modules sit in one row.
+- 1100px and below: the stat modules wrap to two rows of four, with Total twice as wide (seven modules in one row would be too narrow for their labels).
+- 960px and below (tablet and phone share this layout): the rail becomes a top bar that stays at the top while scrolling. The logo mark and wordmark are on the left; the icon-only nav (44px targets) is pushed to the right, followed by the theme toggle and Log out. The avatar and name are hidden (there is no avatar menu). Buttons and inputs become 44px tall, and the job table turns into stacked rows (see 375px below).
+- 640px and below (phone): the wordmark is hidden (logo mark only), page padding is 16px and the headline is 1.5rem. The stat modules go to two columns, with Total across the full first row. In the toolbar, search takes a full row, the status and sort selects share a row, and Add job takes a full row. Two-field form rows stack, and Save and Cancel share a row.
+- 375px (the floor): table rows are stacked fixtures (CSS grid on each row, header row and rank hidden): the top line is company with the Edit and Delete buttons; the second line is position (with location under it); the third line is status tag, pips and deadline. No horizontal scrolling of the page or the table.
+- Forms are single column; the two-field rows stack at 640px and below.
 - Auth pages: at 900px and up a deep-teal brand panel (logo, one-line promise) sits beside the form; below that it becomes a teal strip above the form.
 
 ## Elevation & Depth
@@ -272,13 +274,13 @@ Spacing is a 4px base scale: 4, 8, 12, 16, 24, 32. Modules sit 12px apart, secti
 Flat by default. Depth comes from hairline borders (1px `#d5e3e2`), tonal steps (page grey behind white modules, tab tint on headers) and the teal rail. No resting shadows anywhere.
 
 - **Modal** (`box-shadow: 0 16px 40px rgba(15, 23, 42, 0.25)`): the only shadow, on the confirmation popup, over a `rgba(15, 23, 42, 0.5)` overlay.
-- **Focus ring** (`box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.3)` plus a `#14b8a6` border): inputs and buttons. Links and rail items get a 2px `#14b8a6` outline with 2px offset.
+- **Focus ring** (`box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.3)` plus a `--focus-line` border): inputs and buttons. Buttons, links and icon buttons also get a 2px `--focus-line` outline with 2px offset; rail items keep a white outline. `--focus-line` is `#0f766e` in light (5.5:1 on white) and `#14b8a6` in dark (6.8:1). The lighter `#14b8a6` measured only 2.5:1 on white, so it is no longer used for focus in the light theme.
 
 **The Hairline Rule.** Separate with a 1px line, not a shadow. If something needs to feel raised, it is a modal.
 
 ## Shapes
 
-Crisp and small. Tags and pips 4px, modules, inputs, buttons and the table 6px, modal and auth card 10px. Avatars and the empty-state tile are the only fully round or large shapes. Borders are always 1px; the zone stripe (4px) and rail link are the only thick marks.
+Crisp and small. Tags 4px, pips 2px (they are only 8px tall, so 4px would turn them into pills), modules, inputs, buttons and the table 6px, modal and auth card 10px. Avatars and the empty-state tile are the only fully round or large shapes. Borders are always 1px; the zone stripe (4px) and rail link are the only thick marks.
 
 ## Components
 
@@ -294,18 +296,18 @@ Crisp and small. Tags and pips 4px, modules, inputs, buttons and the table 6px, 
 - Search has a leading icon; selects are native `<select>`.
 
 ### Stat modules
-A white 6px module with a 1px hairline. A header tab (Tab Tint, Label type, 5px 12px) names the metric; below it sits the Display number with tabular figures. While loading, the number is a grey skeleton block of the same size.
+A white 6px module with a 1px hairline. A header tab (Tab Tint, Label type, 5px 12px) names the metric; below it sits the Display number with tabular figures. While loading, the number is a grey skeleton block of the same size. The Dashboard shows seven (Total plus one per status, in pipeline order); the Statistics page shows its own five (Total, Active, Interview, Offer, Rejected).
 
 ### Job table (the signature)
 A real `<table>` in a hairline-bordered white module. Header row is Tab Tint with Label type.
 - **Zone stripe:** 4px left border in the status colour, then the **rank** (condensed, muted) showing the row's place in the current sort.
-- **Company** 600 with position beneath on narrow screens; **Status tag**: 4px radius, tinted background, status text; **Pips**: five 16x8px bars, filled up to the stage (Saved 1, Applied 2, OA 3, Interview 4, Offer 5) in Brand Teal, Offer all five in Offer green. Container has `role="img"` and an `aria-label` such as "Stage 3 of 5: OA".
+- **Company** 600 with position beneath on narrow screens; **Status tag**: 4px radius, tinted background, status text; **Pips**: five 16x8px bars with a 2px radius, filled up to the stage (Saved 1, Applied 2, OA 3, Interview 4, Offer 5) in Brand Teal, Offer all five in Offer green. Unfilled pips are 1px outlines in Field Border (3:1), not a pale fill. Container has `role="img"` and an `aria-label` such as "Stage 3 of 5: OA".
 - **Rejected** shows five empty pips with red-tinted outlines and the company name struck through in muted ink. The data does not record how far a job got, so never fill pips for a stage it did not reach.
 - **Deadline:** date, then a hint line. Vocabulary: upcoming ("In 12 days", muted), due soon ("In 3 days", "Tomorrow", Soon Amber plus clock icon), overdue ("2 days overdue", Overdue Red plus alert icon), done (Offer and Rejected keep their date in muted text with no hint; a job with no deadline shows a dash). Location sits under the position in muted text, and the row's rank continues across pages. Thresholds stay as already coded in `utils/format.js`.
 - Hover tints the row Mint Wash (on hover-capable pointers only). Edit and Delete icon buttons sit at the row end.
 
 ### Navigation (rail)
-Deep Rail Teal, 232px. Logo mark and wordmark at top. Links are 40px rows with a 20px icon and label, 6px radius; default `#b7e4de`, hover `rgba(255,255,255,0.08)`, active Light Teal fill with `#04201e` text (600). The page you are on also has `aria-current="page"`. User block at the bottom: avatar (34px round), name, then two icon buttons: theme toggle and Log out. On phones it becomes a top bar with icons only.
+Deep Rail Teal, 232px. Logo mark and wordmark at top. Links are 40px rows with a 20px icon and label, 6px radius; default `#b7e4de`, hover `rgba(255,255,255,0.08)`, active Light Teal fill with `#04201e` text (600). The page you are on also has `aria-current="page"`. User block at the bottom: avatar (34px round), name (it may wrap to two lines before it is cut off with an ellipsis), then two icon buttons: theme toggle and Log out. At 960px and below it becomes a top bar with icon-only links, the theme toggle and Log out; the avatar and name are hidden (see Layout, Responsive).
 
 ### Theme toggle
 An icon button (sun or moon, 18px, drawn from the existing inline SVG set) with a 44px touch target, in the rail's user block next to Log out. It shows the icon of the theme you will get: a moon in light mode, a sun in dark mode. It has an `aria-label` and a `title` that say the action ("Switch to dark mode" / "Switch to light mode"), a visible focus ring, and sidebar-style hover (`rgba(255,255,255,0.08)`). Clicking applies the theme at once and saves it in `localStorage`. It is the only control that changes the whole page's colours, so it does not animate.
@@ -320,6 +322,9 @@ Deep Rail Teal panel with the logo and one line ("Know where every application s
 
 ### Confirmation modal
 10px radius white panel, Title, one muted sentence naming the job, Cancel (outline) and Delete (danger). Focus moves into the modal, Escape closes it, focus returns to the trigger. Overlay as in Elevation.
+
+### Toast
+A short confirmation after a job is added ("Job added"), edited ("Changes saved") or deleted ("Job deleted"). It uses the success colours (`--success` text on `--success-bg`, `--success-line` border, 6px radius, a check icon before the text), so it follows the theme. No shadow (hairline rule). It sits at the bottom right above 960px and along the bottom edge, centred, at 960px and below. It stays for 5 seconds or until the small close button (36px, 44px on touch) is pressed, and a newer message replaces it. It lives above the router, so a message set just before the app goes back to the dashboard is still shown there. The region that holds it is always on the page with `role="status"`, so screen readers announce the text without moving the keyboard focus. Errors never use a toast: they stay in the red alert on the page.
 
 ### Charts (Statistics)
 Each chart sits in a module with a header tab. Pie by status uses the six status colours with a text legend that lists each status and its count (colour is never the only label). Bar chart per month uses Brand Teal bars, `#e5eeed` horizontal gridlines only, 12px Ink Muted axis labels, and a tooltip with a 1px hairline border and 6px radius. No 3D, no gradients, no decorative legends. Both charts animate once on mount, at most 400ms, and never re-animate on re-render.
@@ -336,6 +341,7 @@ Motion confirms, it does not decorate. This is a tool opened many times a day, s
 | Row, link, rail hover | Feedback | background/colour only, `--dur-fast`, hover-capable pointers only |
 | Input focus | State | border and ring, `--dur-fast` |
 | Search, filter, sort, page change | Preventing a jarring change | existing rows dim to 55% opacity in 150ms while the next page loads; no sliding |
+| Toast appears | Confirming an action | `opacity 0 -> 1` and `translateY(8px) -> none` in 180ms, `--ease-out`. It leaves by itself after 5s, or at once when dismissed (reduced motion: opacity only) |
 | Confirmation modal open | Spatial consistency | overlay fades in 150ms; panel `opacity 0 -> 1` and `translateY(8px) scale(0.98) -> none` in 180ms, `--ease-out`. Closing is instant |
 | Theme switch | (none) | instant colour change, no cross-fade, no transition on the whole page |
 | Skeleton | State | slow shimmer, 1.2s linear loop |

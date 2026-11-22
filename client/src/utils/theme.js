@@ -12,7 +12,11 @@ export function getTheme() {
 
 // Show a theme (this only changes the page, it does not remember anything)
 export function applyTheme(theme) {
-  document.documentElement.setAttribute("data-theme", theme);
+  const root = document.documentElement;
+  // Switch off every CSS transition for one frame, so the colors change instantly (see .theme-switching)
+  root.classList.add("theme-switching");
+  root.setAttribute("data-theme", theme);
+  requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove("theme-switching")));
 }
 
 // Remember the user's choice for next time.
